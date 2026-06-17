@@ -32,7 +32,6 @@
 
     header p {
       margin-top: 8px;
-      font-size: 16px;
       color: #ddd;
     }
 
@@ -51,14 +50,12 @@
 
     .tab-button {
       padding: 12px 24px;
-      border: none;
       border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
       background: rgba(255,255,255,0.15);
       color: white;
       font-weight: bold;
       cursor: pointer;
-      font-size: 15px;
-      border: 1px solid rgba(255,255,255,0.3);
     }
 
     .tab-button.active {
@@ -94,18 +91,23 @@
       gap: 28px;
     }
 
-    .round h2 {
+    .round h2,
+    .player-section h2,
+    .scorer-section h2 {
       text-align: center;
-      font-size: 15px;
-      margin: 0 0 10px;
-      text-transform: uppercase;
       color: #00e0d5;
+      text-transform: uppercase;
       letter-spacing: 1px;
     }
 
+    .round h2 {
+      font-size: 15px;
+      margin: 0 0 10px;
+    }
+
     .match {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.35);
       border-radius: 8px;
       padding: 12px;
       min-height: 118px;
@@ -123,11 +125,24 @@
       margin-bottom: 0;
     }
 
-    .flag {
-      width: 32px;
-      text-align: center;
-      font-size: 22px;
-      flex-shrink: 0;
+    .team-icon {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 23px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .team-icon img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      display: block;
     }
 
     select,
@@ -138,11 +153,6 @@
       border: none;
       font-size: 14px;
       outline: none;
-    }
-
-    select {
-      background: white;
-      color: #111;
     }
 
     .center-area {
@@ -156,7 +166,7 @@
 
     .final-box {
       width: 100%;
-      background: rgba(255, 215, 0, 0.15);
+      background: rgba(255,215,0,0.15);
       border: 2px solid gold;
       border-radius: 10px;
       padding: 18px;
@@ -169,7 +179,7 @@
       padding: 18px;
       border-radius: 12px;
       width: 100%;
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+      box-shadow: 0 0 25px rgba(255,215,0,0.5);
     }
 
     .champion h2 {
@@ -179,21 +189,12 @@
 
     .player-section,
     .scorer-section {
-      max-width: 1000px;
+      max-width: 1050px;
       margin: 20px auto 40px;
       padding: 20px;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.3);
       border-radius: 12px;
-    }
-
-    .player-section h2,
-    .scorer-section h2 {
-      text-align: center;
-      margin-top: 0;
-      color: #00e0d5;
-      text-transform: uppercase;
-      letter-spacing: 1px;
     }
 
     .player-grid {
@@ -216,27 +217,26 @@
       color: #ddd;
     }
 
-    .scorer-table-wrapper {
+    .table-wrapper {
       overflow-x: auto;
     }
 
     table {
       width: 100%;
+      min-width: 850px;
       border-collapse: collapse;
-      min-width: 700px;
       margin-top: 15px;
     }
 
     th,
     td {
       border: 1px solid rgba(255,255,255,0.25);
-      padding: 10px;
+      padding: 9px;
       text-align: center;
     }
 
     th {
-      background: rgba(0, 224, 213, 0.25);
-      color: white;
+      background: rgba(0,224,213,0.25);
       text-transform: uppercase;
       font-size: 13px;
       letter-spacing: 1px;
@@ -281,21 +281,26 @@
       background: #ff6f89;
     }
 
+    .small-danger {
+      padding: 7px 10px;
+      background: #ff4d6d;
+      color: white;
+      font-size: 12px;
+    }
+
     @media (max-width: 700px) {
       header h1 {
         font-size: 25px;
       }
 
+      .tabs,
       .player-grid {
         grid-template-columns: 1fr;
+        flex-direction: column;
       }
 
       .bracket-wrapper {
         padding: 15px;
-      }
-
-      .tabs {
-        flex-direction: column;
       }
     }
   </style>
@@ -314,7 +319,6 @@
     <button class="tab-button" onclick="openTab('scorerTab', this)">Top Scorers</button>
   </div>
 
-  <!-- TOURNAMENT TAB -->
   <div id="tournamentTab" class="tab-content active">
 
     <div class="bracket-wrapper">
@@ -324,47 +328,23 @@
           <h2>Quarter Finals</h2>
 
           <div class="match">
-            <div class="team-row">
-              <span class="flag" id="flag-team1"></span>
-              <select id="team1" onchange="updateFlag('team1')"></select>
-            </div>
-            <div class="team-row">
-              <span class="flag" id="flag-team2"></span>
-              <select id="team2" onchange="updateFlag('team2')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-team1"></span><select id="team1" onchange="updateIcon('team1')"></select></div>
+            <div class="team-row"><span class="team-icon" id="icon-team2"></span><select id="team2" onchange="updateIcon('team2')"></select></div>
           </div>
 
           <div class="match">
-            <div class="team-row">
-              <span class="flag" id="flag-team3"></span>
-              <select id="team3" onchange="updateFlag('team3')"></select>
-            </div>
-            <div class="team-row">
-              <span class="flag" id="flag-team4"></span>
-              <select id="team4" onchange="updateFlag('team4')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-team3"></span><select id="team3" onchange="updateIcon('team3')"></select></div>
+            <div class="team-row"><span class="team-icon" id="icon-team4"></span><select id="team4" onchange="updateIcon('team4')"></select></div>
           </div>
 
           <div class="match">
-            <div class="team-row">
-              <span class="flag" id="flag-team5"></span>
-              <select id="team5" onchange="updateFlag('team5')"></select>
-            </div>
-            <div class="team-row">
-              <span class="flag" id="flag-team6"></span>
-              <select id="team6" onchange="updateFlag('team6')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-team5"></span><select id="team5" onchange="updateIcon('team5')"></select></div>
+            <div class="team-row"><span class="team-icon" id="icon-team6"></span><select id="team6" onchange="updateIcon('team6')"></select></div>
           </div>
 
           <div class="match">
-            <div class="team-row">
-              <span class="flag" id="flag-team7"></span>
-              <select id="team7" onchange="updateFlag('team7')"></select>
-            </div>
-            <div class="team-row">
-              <span class="flag" id="flag-team8"></span>
-              <select id="team8" onchange="updateFlag('team8')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-team7"></span><select id="team7" onchange="updateIcon('team7')"></select></div>
+            <div class="team-row"><span class="team-icon" id="icon-team8"></span><select id="team8" onchange="updateIcon('team8')"></select></div>
           </div>
         </div>
 
@@ -372,49 +352,26 @@
           <h2>Semi Finalists</h2>
 
           <div class="match">
-            <div class="team-row">
-              <span class="flag" id="flag-semi1"></span>
-              <select id="semi1" onchange="updateFlag('semi1')"></select>
-            </div>
-            <div class="team-row">
-              <span class="flag" id="flag-semi2"></span>
-              <select id="semi2" onchange="updateFlag('semi2')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-semi1"></span><select id="semi1" onchange="updateIcon('semi1')"></select></div>
+            <div class="team-row"><span class="team-icon" id="icon-semi2"></span><select id="semi2" onchange="updateIcon('semi2')"></select></div>
           </div>
 
           <div class="match">
-            <div class="team-row">
-              <span class="flag" id="flag-semi3"></span>
-              <select id="semi3" onchange="updateFlag('semi3')"></select>
-            </div>
-            <div class="team-row">
-              <span class="flag" id="flag-semi4"></span>
-              <select id="semi4" onchange="updateFlag('semi4')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-semi3"></span><select id="semi3" onchange="updateIcon('semi3')"></select></div>
+            <div class="team-row"><span class="team-icon" id="icon-semi4"></span><select id="semi4" onchange="updateIcon('semi4')"></select></div>
           </div>
         </div>
 
         <div class="center-area">
           <div class="final-box">
             <h2>Final</h2>
-
-            <div class="team-row">
-              <span class="flag" id="flag-final1"></span>
-              <select id="final1" onchange="updateFlag('final1')"></select>
-            </div>
-
-            <div class="team-row">
-              <span class="flag" id="flag-final2"></span>
-              <select id="final2" onchange="updateFlag('final2')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-final1"></span><select id="final1" onchange="updateIcon('final1')"></select></div>
+            <div class="team-row"><span class="team-icon" id="icon-final2"></span><select id="final2" onchange="updateIcon('final2')"></select></div>
           </div>
 
           <div class="champion">
             <h2>Champion</h2>
-            <div class="team-row">
-              <span class="flag" id="flag-champion"></span>
-              <select id="champion" onchange="updateFlag('champion')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-champion"></span><select id="champion" onchange="updateIcon('champion')"></select></div>
           </div>
         </div>
 
@@ -422,34 +379,19 @@
           <h2>Finalists</h2>
 
           <div class="match">
-            <div class="team-row">
-              <span class="flag" id="flag-finalist1"></span>
-              <select id="finalist1" onchange="updateFlag('finalist1')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-finalist1"></span><select id="finalist1" onchange="updateIcon('finalist1')"></select></div>
           </div>
 
           <div class="match">
-            <div class="team-row">
-              <span class="flag" id="flag-finalist2"></span>
-              <select id="finalist2" onchange="updateFlag('finalist2')"></select>
-            </div>
+            <div class="team-row"><span class="team-icon" id="icon-finalist2"></span><select id="finalist2" onchange="updateIcon('finalist2')"></select></div>
           </div>
         </div>
 
         <div class="round">
           <h2>Scores</h2>
-
-          <div class="match">
-            <input id="score1" placeholder="Quarter Final Scores" oninput="saveData()" />
-          </div>
-
-          <div class="match">
-            <input id="score2" placeholder="Semi Final Scores" oninput="saveData()" />
-          </div>
-
-          <div class="match">
-            <input id="score3" placeholder="Final Score" oninput="saveData()" />
-          </div>
+          <div class="match"><input id="score1" placeholder="Quarter Final Scores" oninput="saveData()" /></div>
+          <div class="match"><input id="score2" placeholder="Semi Final Scores" oninput="saveData()" /></div>
+          <div class="match"><input id="score3" placeholder="Final Score" oninput="saveData()" /></div>
         </div>
 
       </div>
@@ -461,155 +403,50 @@
       <div class="player-grid">
         <div class="player-card">
           <h3>Player 1</h3>
-
           <label>Player Name</label>
           <input id="player1Name" value="Joel" oninput="saveData()" />
 
           <label>Team Picked</label>
-          <input id="player1Team" placeholder="Example: Argentina, France, Brazil..." oninput="saveData()" />
+          <input id="player1Team" placeholder="Example: Argentina, Real Madrid..." oninput="saveData()" />
         </div>
 
         <div class="player-card">
           <h3>Player 2</h3>
-
           <label>Player Name</label>
           <input id="player2Name" value="Joshua" oninput="saveData()" />
 
           <label>Team Picked</label>
-          <input id="player2Team" placeholder="Example: Portugal, England, Spain..." oninput="saveData()" />
+          <input id="player2Team" placeholder="Example: France, Barcelona..." oninput="saveData()" />
         </div>
       </div>
     </section>
 
   </div>
 
-  <!-- TOP SCORER TAB -->
   <div id="scorerTab" class="tab-content">
-
     <section class="scorer-section">
       <h2>Top Scorer List</h2>
 
-      <div class="scorer-table-wrapper">
+      <div class="buttons" style="margin-bottom: 15px;">
+        <button onclick="addScorerRow()">Add Scorer</button>
+      </div>
+
+      <div class="table-wrapper">
         <table>
           <thead>
             <tr>
               <th>Rank</th>
               <th>Scorer Name</th>
-              <th>Country / Team</th>
+              <th>Team</th>
               <th>Goals</th>
               <th>Owned By</th>
+              <th>Remove</th>
             </tr>
           </thead>
-
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td><input id="scorer1Name" placeholder="Player name" oninput="saveData()" /></td>
-              <td>
-                <div class="team-row">
-                  <span class="flag" id="flag-scorer1Team"></span>
-                  <select id="scorer1Team" onchange="updateFlag('scorer1Team')"></select>
-                </div>
-              </td>
-              <td><input id="scorer1Goals" type="number" min="0" placeholder="0" oninput="saveData()" /></td>
-              <td><input id="scorer1Owner" placeholder="Joel or Joshua" oninput="saveData()" /></td>
-            </tr>
-
-            <tr>
-              <td>2</td>
-              <td><input id="scorer2Name" placeholder="Player name" oninput="saveData()" /></td>
-              <td>
-                <div class="team-row">
-                  <span class="flag" id="flag-scorer2Team"></span>
-                  <select id="scorer2Team" onchange="updateFlag('scorer2Team')"></select>
-                </div>
-              </td>
-              <td><input id="scorer2Goals" type="number" min="0" placeholder="0" oninput="saveData()" /></td>
-              <td><input id="scorer2Owner" placeholder="Joel or Joshua" oninput="saveData()" /></td>
-            </tr>
-
-            <tr>
-              <td>3</td>
-              <td><input id="scorer3Name" placeholder="Player name" oninput="saveData()" /></td>
-              <td>
-                <div class="team-row">
-                  <span class="flag" id="flag-scorer3Team"></span>
-                  <select id="scorer3Team" onchange="updateFlag('scorer3Team')"></select>
-                </div>
-              </td>
-              <td><input id="scorer3Goals" type="number" min="0" placeholder="0" oninput="saveData()" /></td>
-              <td><input id="scorer3Owner" placeholder="Joel or Joshua" oninput="saveData()" /></td>
-            </tr>
-
-            <tr>
-              <td>4</td>
-              <td><input id="scorer4Name" placeholder="Player name" oninput="saveData()" /></td>
-              <td>
-                <div class="team-row">
-                  <span class="flag" id="flag-scorer4Team"></span>
-                  <select id="scorer4Team" onchange="updateFlag('scorer4Team')"></select>
-                </div>
-              </td>
-              <td><input id="scorer4Goals" type="number" min="0" placeholder="0" oninput="saveData()" /></td>
-              <td><input id="scorer4Owner" placeholder="Joel or Joshua" oninput="saveData()" /></td>
-            </tr>
-
-            <tr>
-              <td>5</td>
-              <td><input id="scorer5Name" placeholder="Player name" oninput="saveData()" /></td>
-              <td>
-                <div class="team-row">
-                  <span class="flag" id="flag-scorer5Team"></span>
-                  <select id="scorer5Team" onchange="updateFlag('scorer5Team')"></select>
-                </div>
-              </td>
-              <td><input id="scorer5Goals" type="number" min="0" placeholder="0" oninput="saveData()" /></td>
-              <td><input id="scorer5Owner" placeholder="Joel or Joshua" oninput="saveData()" /></td>
-            </tr>
-
-            <tr>
-              <td>6</td>
-              <td><input id="scorer6Name" placeholder="Player name" oninput="saveData()" /></td>
-              <td>
-                <div class="team-row">
-                  <span class="flag" id="flag-scorer6Team"></span>
-                  <select id="scorer6Team" onchange="updateFlag('scorer6Team')"></select>
-                </div>
-              </td>
-              <td><input id="scorer6Goals" type="number" min="0" placeholder="0" oninput="saveData()" /></td>
-              <td><input id="scorer6Owner" placeholder="Joel or Joshua" oninput="saveData()" /></td>
-            </tr>
-
-            <tr>
-              <td>7</td>
-              <td><input id="scorer7Name" placeholder="Player name" oninput="saveData()" /></td>
-              <td>
-                <div class="team-row">
-                  <span class="flag" id="flag-scorer7Team"></span>
-                  <select id="scorer7Team" onchange="updateFlag('scorer7Team')"></select>
-                </div>
-              </td>
-              <td><input id="scorer7Goals" type="number" min="0" placeholder="0" oninput="saveData()" /></td>
-              <td><input id="scorer7Owner" placeholder="Joel or Joshua" oninput="saveData()" /></td>
-            </tr>
-
-            <tr>
-              <td>8</td>
-              <td><input id="scorer8Name" placeholder="Player name" oninput="saveData()" /></td>
-              <td>
-                <div class="team-row">
-                  <span class="flag" id="flag-scorer8Team"></span>
-                  <select id="scorer8Team" onchange="updateFlag('scorer8Team')"></select>
-                </div>
-              </td>
-              <td><input id="scorer8Goals" type="number" min="0" placeholder="0" oninput="saveData()" /></td>
-              <td><input id="scorer8Owner" placeholder="Joel or Joshua" oninput="saveData()" /></td>
-            </tr>
-          </tbody>
+          <tbody id="scorerTableBody"></tbody>
         </table>
       </div>
     </section>
-
   </div>
 
   <div class="buttons">
@@ -618,100 +455,265 @@
   </div>
 
   <script>
-    const countries = [
-      { name: "Select Team", flag: "⚽" },
-      { name: "Argentina", flag: "🇦🇷" },
-      { name: "Brazil", flag: "🇧🇷" },
-      { name: "France", flag: "🇫🇷" },
-      { name: "Portugal", flag: "🇵🇹" },
-      { name: "England", flag: "🏴" },
-      { name: "Spain", flag: "🇪🇸" },
-      { name: "Germany", flag: "🇩🇪" },
-      { name: "Netherlands", flag: "🇳🇱" },
-      { name: "Italy", flag: "🇮🇹" },
-      { name: "Belgium", flag: "🇧🇪" },
-      { name: "Croatia", flag: "🇭🇷" },
-      { name: "Morocco", flag: "🇲🇦" },
-      { name: "USA", flag: "🇺🇸" },
-      { name: "Mexico", flag: "🇲🇽" },
-      { name: "Japan", flag: "🇯🇵" },
-      { name: "South Korea", flag: "🇰🇷" },
-      { name: "Ghana", flag: "🇬🇭" },
-      { name: "Senegal", flag: "🇸🇳" },
-      { name: "Switzerland", flag: "🇨🇭" },
-      { name: "Poland", flag: "🇵🇱" },
-      { name: "Uruguay", flag: "🇺🇾" },
-      { name: "Colombia", flag: "🇨🇴" },
-      { name: "Canada", flag: "🇨🇦" },
-      { name: "Denmark", flag: "🇩🇰" }
+    const teams = [
+      { name: "Select Team", type: "none", icon: "⚽" },
+
+      // International teams
+      { name: "Argentina", type: "country", code: "AR" },
+      { name: "Australia", type: "country", code: "AU" },
+      { name: "Austria", type: "country", code: "AT" },
+      { name: "Belgium", type: "country", code: "BE" },
+      { name: "Brazil", type: "country", code: "BR" },
+      { name: "Canada", type: "country", code: "CA" },
+      { name: "Chile", type: "country", code: "CL" },
+      { name: "Colombia", type: "country", code: "CO" },
+      { name: "Croatia", type: "country", code: "HR" },
+      { name: "Czech Republic", type: "country", code: "CZ" },
+      { name: "Denmark", type: "country", code: "DK" },
+      { name: "Ecuador", type: "country", code: "EC" },
+      { name: "England", type: "country", icon: "🏴" },
+      { name: "France", type: "country", code: "FR" },
+      { name: "Germany", type: "country", code: "DE" },
+      { name: "Ghana", type: "country", code: "GH" },
+      { name: "Italy", type: "country", code: "IT" },
+      { name: "Japan", type: "country", code: "JP" },
+      { name: "Mexico", type: "country", code: "MX" },
+      { name: "Morocco", type: "country", code: "MA" },
+      { name: "Netherlands", type: "country", code: "NL" },
+      { name: "Norway", type: "country", code: "NO" },
+      { name: "Poland", type: "country", code: "PL" },
+      { name: "Portugal", type: "country", code: "PT" },
+      { name: "Scotland", type: "country", icon: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+      { name: "Senegal", type: "country", code: "SN" },
+      { name: "South Korea", type: "country", code: "KR" },
+      { name: "Spain", type: "country", code: "ES" },
+      { name: "Sweden", type: "country", code: "SE" },
+      { name: "Switzerland", type: "country", code: "CH" },
+      { name: "Turkey", type: "country", code: "TR" },
+      { name: "Uruguay", type: "country", code: "UY" },
+      { name: "USA", type: "country", code: "US" },
+      { name: "Wales", type: "country", icon: "🏴󠁧󠁢󠁷󠁬󠁳󠁿" },
+
+      // Top club teams
+      { name: "Real Madrid", type: "club", logo: "https://logo.clearbit.com/realmadrid.com" },
+      { name: "Barcelona", type: "club", logo: "https://logo.clearbit.com/fcbarcelona.com" },
+      { name: "Manchester City", type: "club", logo: "https://logo.clearbit.com/mancity.com" },
+      { name: "Liverpool", type: "club", logo: "https://logo.clearbit.com/liverpoolfc.com" },
+      { name: "Manchester United", type: "club", logo: "https://logo.clearbit.com/manutd.com" },
+      { name: "Chelsea", type: "club", logo: "https://logo.clearbit.com/chelseafc.com" },
+      { name: "Arsenal", type: "club", logo: "https://logo.clearbit.com/arsenal.com" },
+      { name: "Tottenham", type: "club", logo: "https://logo.clearbit.com/tottenhamhotspur.com" },
+      { name: "Bayern Munich", type: "club", logo: "https://logo.clearbit.com/fcbayern.com" },
+      { name: "Borussia Dortmund", type: "club", logo: "https://logo.clearbit.com/bvb.de" },
+      { name: "PSG", type: "club", logo: "https://logo.clearbit.com/psg.fr" },
+      { name: "Inter Milan", type: "club", logo: "https://logo.clearbit.com/inter.it" },
+      { name: "AC Milan", type: "club", logo: "https://logo.clearbit.com/acmilan.com" },
+      { name: "Juventus", type: "club", logo: "https://logo.clearbit.com/juventus.com" },
+      { name: "Napoli", type: "club", logo: "https://logo.clearbit.com/sscnapoli.it" },
+      { name: "Atletico Madrid", type: "club", logo: "https://logo.clearbit.com/atleticodemadrid.com" },
+      { name: "Bayer Leverkusen", type: "club", logo: "https://logo.clearbit.com/bayer04.de" },
+      { name: "RB Leipzig", type: "club", logo: "https://logo.clearbit.com/rbleipzig.com" },
+      { name: "Ajax", type: "club", logo: "https://logo.clearbit.com/ajax.nl" },
+      { name: "Benfica", type: "club", logo: "https://logo.clearbit.com/slbenfica.pt" },
+      { name: "Porto", type: "club", logo: "https://logo.clearbit.com/fcporto.pt" },
+      { name: "Sporting CP", type: "club", logo: "https://logo.clearbit.com/sporting.pt" },
+      { name: "Roma", type: "club", logo: "https://logo.clearbit.com/asroma.com" },
+      { name: "Lazio", type: "club", logo: "https://logo.clearbit.com/sslazio.it" },
+      { name: "Newcastle United", type: "club", logo: "https://logo.clearbit.com/newcastleunited.com" },
+      { name: "Aston Villa", type: "club", logo: "https://logo.clearbit.com/avfc.co.uk" },
+      { name: "West Ham", type: "club", logo: "https://logo.clearbit.com/whufc.com" },
+      { name: "Sevilla", type: "club", logo: "https://logo.clearbit.com/sevillafc.es" },
+      { name: "Villarreal", type: "club", logo: "https://logo.clearbit.com/villarrealcf.es" },
+      { name: "Al Nassr", type: "club", logo: "https://logo.clearbit.com/alnassr.sa" }
     ];
 
-    const selectIds = [
+    const bracketSelectIds = [
       "team1", "team2", "team3", "team4", "team5", "team6", "team7", "team8",
       "semi1", "semi2", "semi3", "semi4",
       "final1", "final2",
       "champion",
-      "finalist1", "finalist2",
-      "scorer1Team", "scorer2Team", "scorer3Team", "scorer4Team",
-      "scorer5Team", "scorer6Team", "scorer7Team", "scorer8Team"
+      "finalist1", "finalist2"
     ];
 
     const inputIds = [
       "score1", "score2", "score3",
       "player1Name", "player1Team",
-      "player2Name", "player2Team",
-
-      "scorer1Name", "scorer1Goals", "scorer1Owner",
-      "scorer2Name", "scorer2Goals", "scorer2Owner",
-      "scorer3Name", "scorer3Goals", "scorer3Owner",
-      "scorer4Name", "scorer4Goals", "scorer4Owner",
-      "scorer5Name", "scorer5Goals", "scorer5Owner",
-      "scorer6Name", "scorer6Goals", "scorer6Owner",
-      "scorer7Name", "scorer7Goals", "scorer7Owner",
-      "scorer8Name", "scorer8Goals", "scorer8Owner"
+      "player2Name", "player2Team"
     ];
 
+    let scorers = [];
+
     function openTab(tabId, button) {
-      const tabs = document.querySelectorAll(".tab-content");
-      const buttons = document.querySelectorAll(".tab-button");
-
-      tabs.forEach(tab => tab.classList.remove("active"));
-      buttons.forEach(btn => btn.classList.remove("active"));
-
+      document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
       document.getElementById(tabId).classList.add("active");
       button.classList.add("active");
     }
 
-    function fillDropdowns() {
-      selectIds.forEach(id => {
-        const select = document.getElementById(id);
-        select.innerHTML = "";
+    function countryCodeToFlag(code) {
+      return code
+        .toUpperCase()
+        .replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt()));
+    }
 
-        countries.forEach(country => {
-          const option = document.createElement("option");
-          option.value = country.name;
-          option.textContent = `${country.flag} ${country.name}`;
-          select.appendChild(option);
-        });
+    function getTeamIcon(teamName) {
+      const team = teams.find(t => t.name === teamName);
+
+      if (!team) return "⚽";
+
+      if (team.logo) {
+        return `<img src="${team.logo}" onerror="this.outerHTML='⚽'" alt="${team.name} logo">`;
+      }
+
+      if (team.code) {
+        return countryCodeToFlag(team.code);
+      }
+
+      return team.icon || "⚽";
+    }
+
+    function fillSelect(select) {
+      select.innerHTML = "";
+
+      const internationalGroup = document.createElement("optgroup");
+      internationalGroup.label = "International Teams";
+
+      const clubGroup = document.createElement("optgroup");
+      clubGroup.label = "Club Teams";
+
+      teams.forEach(team => {
+        const option = document.createElement("option");
+        option.value = team.name;
+
+        if (team.logo) {
+          option.textContent = `⚽ ${team.name}`;
+        } else if (team.code) {
+          option.textContent = `${countryCodeToFlag(team.code)} ${team.name}`;
+        } else {
+          option.textContent = `${team.icon || "⚽"} ${team.name}`;
+        }
+
+        if (team.type === "club") {
+          clubGroup.appendChild(option);
+        } else {
+          internationalGroup.appendChild(option);
+        }
+      });
+
+      select.appendChild(internationalGroup);
+      select.appendChild(clubGroup);
+    }
+
+    function fillDropdowns() {
+      bracketSelectIds.forEach(id => {
+        const select = document.getElementById(id);
+        fillSelect(select);
       });
     }
 
-    function updateFlag(id) {
+    function updateIcon(id) {
       const selectedTeam = document.getElementById(id).value;
-      const country = countries.find(c => c.name === selectedTeam);
-      const flagElement = document.getElementById(`flag-${id}`);
+      const icon = document.getElementById(`icon-${id}`);
 
-      if (flagElement) {
-        flagElement.textContent = country ? country.flag : "⚽";
+      if (icon) {
+        icon.innerHTML = getTeamIcon(selectedTeam);
       }
 
       saveData();
     }
 
-    function saveData() {
-      const data = {};
+    function addScorerRow(savedScorer = null) {
+      scorers.push(savedScorer || {
+        name: "",
+        team: "Select Team",
+        goals: "",
+        owner: ""
+      });
 
-      selectIds.forEach(id => {
+      renderScorers();
+      saveData();
+    }
+
+    function deleteScorerRow(index) {
+      scorers.splice(index, 1);
+      renderScorers();
+      saveData();
+    }
+
+    function updateScorer(index, field, value) {
+      scorers[index][field] = value;
+      saveData();
+
+      if (field === "team") {
+        const icon = document.getElementById(`icon-scorer-${index}`);
+        if (icon) {
+          icon.innerHTML = getTeamIcon(value);
+        }
+      }
+    }
+
+    function renderScorers() {
+      const tbody = document.getElementById("scorerTableBody");
+      tbody.innerHTML = "";
+
+      scorers.forEach((scorer, index) => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+
+          <td>
+            <input
+              value="${scorer.name || ""}"
+              placeholder="Example: Mbappe"
+              oninput="updateScorer(${index}, 'name', this.value)"
+            />
+          </td>
+
+          <td>
+            <div class="team-row">
+              <span class="team-icon" id="icon-scorer-${index}">${getTeamIcon(scorer.team)}</span>
+              <select onchange="updateScorer(${index}, 'team', this.value)"></select>
+            </div>
+          </td>
+
+          <td>
+            <input
+              type="number"
+              min="0"
+              value="${scorer.goals || ""}"
+              placeholder="0"
+              oninput="updateScorer(${index}, 'goals', this.value)"
+            />
+          </td>
+
+          <td>
+            <input
+              value="${scorer.owner || ""}"
+              placeholder="Joel or Joshua"
+              oninput="updateScorer(${index}, 'owner', this.value)"
+            />
+          </td>
+
+          <td>
+            <button class="small-danger" onclick="deleteScorerRow(${index})">Delete</button>
+          </td>
+        `;
+
+        const select = tr.querySelector("select");
+        fillSelect(select);
+        select.value = scorer.team || "Select Team";
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function saveData() {
+      const data = {
+        scorers: scorers
+      };
+
+      bracketSelectIds.forEach(id => {
         const element = document.getElementById(id);
         if (element) data[id] = element.value;
       });
@@ -729,12 +731,21 @@
 
       if (!saved) {
         setDefaultTeams();
+        scorers = [
+          { name: "", team: "Select Team", goals: "", owner: "" },
+          { name: "", team: "Select Team", goals: "", owner: "" },
+          { name: "", team: "Select Team", goals: "", owner: "" },
+          { name: "", team: "Select Team", goals: "", owner: "" },
+          { name: "", team: "Select Team", goals: "", owner: "" }
+        ];
+        renderScorers();
+        saveData();
         return;
       }
 
       const data = JSON.parse(saved);
 
-      selectIds.forEach(id => {
+      bracketSelectIds.forEach(id => {
         const element = document.getElementById(id);
 
         if (element && data[id]) {
@@ -742,7 +753,7 @@
         }
 
         if (element) {
-          updateFlag(id);
+          updateIcon(id);
         }
       });
 
@@ -753,55 +764,68 @@
           element.value = data[id];
         }
       });
+
+      scorers = data.scorers || [];
+      if (scorers.length === 0) {
+        scorers = [
+          { name: "", team: "Select Team", goals: "", owner: "" },
+          { name: "", team: "Select Team", goals: "", owner: "" },
+          { name: "", team: "Select Team", goals: "", owner: "" }
+        ];
+      }
+
+      renderScorers();
     }
 
     function setDefaultTeams() {
       const defaults = {
         team1: "Argentina",
-        team2: "USA",
-        team3: "Brazil",
-        team4: "Spain",
-        team5: "France",
-        team6: "Portugal",
-        team7: "England",
-        team8: "Netherlands",
+        team2: "Brazil",
+        team3: "France",
+        team4: "Portugal",
+        team5: "England",
+        team6: "Spain",
+        team7: "Real Madrid",
+        team8: "Barcelona",
         player1Name: "Joel",
         player2Name: "Joshua"
       };
 
       Object.keys(defaults).forEach(id => {
         const element = document.getElementById(id);
-        if (element) {
-          element.value = defaults[id];
-        }
+        if (element) element.value = defaults[id];
       });
 
-      selectIds.forEach(id => updateFlag(id));
-      saveData();
+      bracketSelectIds.forEach(id => updateIcon(id));
     }
 
     function resetTournament() {
       if (confirm("Reset the whole tournament and top scorer list?")) {
         localStorage.removeItem("fifaTournamentData");
 
-        selectIds.forEach(id => {
+        bracketSelectIds.forEach(id => {
           const element = document.getElementById(id);
           if (element) {
             element.value = "Select Team";
-            updateFlag(id);
+            updateIcon(id);
           }
         });
 
         inputIds.forEach(id => {
           const element = document.getElementById(id);
-          if (element) {
-            element.value = "";
-          }
+          if (element) element.value = "";
         });
 
         document.getElementById("player1Name").value = "Joel";
         document.getElementById("player2Name").value = "Joshua";
 
+        scorers = [
+          { name: "", team: "Select Team", goals: "", owner: "" },
+          { name: "", team: "Select Team", goals: "", owner: "" },
+          { name: "", team: "Select Team", goals: "", owner: "" }
+        ];
+
+        renderScorers();
         saveData();
       }
     }
