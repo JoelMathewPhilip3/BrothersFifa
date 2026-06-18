@@ -103,6 +103,25 @@
       overflow-x: auto;
       padding-bottom: 8px;
     }
+    .sync-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.4px;
+      backdrop-filter: blur(12px);
+    }
+
+    .sync-status.online { color: var(--green); border-color: rgba(76,255,147,0.35); }
+    .sync-status.saving { color: var(--gold); border-color: rgba(255,213,106,0.35); }
+    .sync-status.offline { color: var(--red); border-color: rgba(255,77,109,0.35); }
+
 
     button, .ghost-button, .tab-button {
       border: 0;
@@ -629,6 +648,7 @@
     <button class="ghost-button" onclick="renameTournament()">Rename Current</button>
     <button class="ghost-button" onclick="duplicateTournament()">Duplicate Current</button>
     <button class="danger-button" onclick="deleteCurrentTournament()">Delete Current</button>
+    <span class="sync-status" id="cloudSyncStatus">Firebase: starting...</span>
   </div>
 
   <div class="tournament-tabs" id="tournamentTabs"></div>
@@ -774,6 +794,20 @@
 
   <script>
     const STORAGE_KEY = "fifa25TournamentHubData_v1";
+    const FIREBASE_DATABASE_URL = "https://brothers-fifa-default-rtdb.firebaseio.com";
+    const FIREBASE_PATH = "fifa25TournamentHub/shared";
+    const FIREBASE_CLOUD_URL = `${FIREBASE_DATABASE_URL.replace(/\/$/, "")}/${FIREBASE_PATH}.json`;
+    const CLIENT_ID_KEY = "fifa25TournamentHubClientId_v1";
+    const CLIENT_ID = localStorage.getItem(CLIENT_ID_KEY) || (() => {
+      const id = "client_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(CLIENT_ID_KEY, id);
+      return id;
+    })();
+    let cloudReady = false;
+    let isApplyingCloudUpdate = false;
+    let cloudSaveTimer = null;
+    let lastCloudSignature = "";
+
 
     const teams = [
       { name: "Select Team", type: "none", icon: "⚽" },
@@ -923,19 +957,131 @@
       };
     }
 
-    function loadAppState() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try { appState = JSON.parse(saved); } catch(e) { appState = { activeId: null, tournaments: [] }; }
+    function cloudSignature(state) {
+      return JSON.stringify({ activeId: state?.activeId || null, tournaments: state?.tournaments || [] });
+    }
+
+    function normalizeCloudState(raw) {
+      if (!raw || !Array.isArray(raw.tournaments)) return null;
+      return {
+        activeId: raw.activeId || raw.tournaments[0]?.id || null,
+        tournaments: raw.tournaments
+      };
+    }
+
+    function setCloudStatus(message, mode = "") {
+      const el = document.getElementById("cloudSyncStatus");
+      if (!el) return;
+      el.textContent = message;
+      el.className = "sync-status" + (mode ? " " + mode : "");
+    }
+
+    async function loadAppState() {
+      let loadedFromFirebase = false;
+
+      try {
+        setCloudStatus("Firebase: loading...", "saving");
+        const response = await fetch(FIREBASE_CLOUD_URL + "?t=" + Date.now(), { cache: "no-store" });
+        if (response.ok) {
+          const cloudData = normalizeCloudState(await response.json());
+          if (cloudData) {
+            appState = cloudData;
+            loadedFromFirebase = true;
+            lastCloudSignature = cloudSignature(appState);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            setCloudStatus("Firebase: synced", "online");
+          }
+        } else {
+          throw new Error("Firebase load HTTP " + response.status);
+        }
+      } catch (error) {
+        console.warn("Firebase load failed. Falling back to this device:", error);
+        setCloudStatus("Firebase: offline backup", "offline");
       }
+
+      if (!loadedFromFirebase) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try { appState = JSON.parse(saved); } catch(e) { appState = { activeId: null, tournaments: [] }; }
+        }
+      }
+
       if (!appState.tournaments || appState.tournaments.length === 0) {
         const first = newTournament("Opening Cup");
         appState = { activeId: first.id, tournaments: [first] };
       }
-      if (!appState.activeId || !appState.tournaments.some(t => t.id === appState.activeId)) appState.activeId = appState.tournaments[0].id;
+
+      if (!appState.activeId || !appState.tournaments.some(t => t.id === appState.activeId)) {
+        appState.activeId = appState.tournaments[0].id;
+      }
     }
 
-    function saveAppState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
+    function saveAppState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      if (!cloudReady || isApplyingCloudUpdate) return;
+
+      clearTimeout(cloudSaveTimer);
+      setCloudStatus("Firebase: saving...", "saving");
+      cloudSaveTimer = setTimeout(saveAppStateToFirebase, 350);
+    }
+
+    async function saveAppStateToFirebase() {
+      try {
+        const payload = {
+          activeId: appState.activeId,
+          tournaments: appState.tournaments,
+          lastUpdated: new Date().toISOString(),
+          updatedBy: CLIENT_ID
+        };
+
+        const response = await fetch(FIREBASE_CLOUD_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Firebase save HTTP " + response.status);
+
+        lastCloudSignature = cloudSignature(appState);
+        setCloudStatus("Firebase: synced", "online");
+      } catch (error) {
+        console.error("Firebase save failed:", error);
+        setCloudStatus("Firebase: save failed", "offline");
+      }
+    }
+
+    function startFirebaseLiveSync() {
+      setInterval(async () => {
+        if (!cloudReady || isApplyingCloudUpdate) return;
+
+        try {
+          const response = await fetch(FIREBASE_CLOUD_URL + "?t=" + Date.now(), { cache: "no-store" });
+          if (!response.ok) throw new Error("Firebase sync HTTP " + response.status);
+
+          const cloudData = normalizeCloudState(await response.json());
+          if (!cloudData) return;
+
+          const incomingSignature = cloudSignature(cloudData);
+          if (incomingSignature === cloudSignature(appState) || incomingSignature === lastCloudSignature) {
+            setCloudStatus("Firebase: synced", "online");
+            return;
+          }
+
+          isApplyingCloudUpdate = true;
+          appState = cloudData;
+          lastCloudSignature = incomingSignature;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+          renderAll();
+          setCloudStatus("Firebase: updated", "online");
+          isApplyingCloudUpdate = false;
+        } catch (error) {
+          console.warn("Firebase live sync failed:", error);
+          setCloudStatus("Firebase: offline backup", "offline");
+          isApplyingCloudUpdate = false;
+        }
+      }, 5000);
+    }
+
     function activeTournament() { return appState.tournaments.find(t => t.id === appState.activeId); }
 
     function createTournament() {
@@ -1617,8 +1763,13 @@
       saveAppState();
     }
 
-    loadAppState();
-    renderAll();
+    (async function initApp() {
+      await loadAppState();
+      renderAll();
+      cloudReady = true;
+      saveAppState();
+      startFirebaseLiveSync();
+    })();
   </script>
 </body>
 </html>
