@@ -807,6 +807,8 @@
     let isApplyingCloudUpdate = false;
     let cloudSaveTimer = null;
     let lastCloudSignature = "";
+    let lastLocalMutationMs = 0;
+
 
 
     const teams = [
@@ -961,11 +963,37 @@
       return JSON.stringify({ activeId: state?.activeId || null, tournaments: state?.tournaments || [] });
     }
 
+    function stateTimeMs(state) {
+      return Date.parse(state?.updatedAt || state?.lastUpdated || "") || 0;
+    }
+
+    function markLocalChange() {
+      const now = new Date().toISOString();
+      appState.updatedAt = now;
+      appState.lastUpdated = now;
+      appState.updatedBy = CLIENT_ID;
+      lastLocalMutationMs = Date.now();
+    }
+
     function normalizeCloudState(raw) {
       if (!raw || !Array.isArray(raw.tournaments)) return null;
       return {
         activeId: raw.activeId || raw.tournaments[0]?.id || null,
-        tournaments: raw.tournaments
+        tournaments: raw.tournaments,
+        updatedAt: raw.updatedAt || raw.lastUpdated || "",
+        lastUpdated: raw.lastUpdated || raw.updatedAt || "",
+        updatedBy: raw.updatedBy || "unknown"
+      };
+    }
+
+    function normalizeLocalState(raw) {
+      if (!raw || !Array.isArray(raw.tournaments)) return null;
+      return {
+        activeId: raw.activeId || raw.tournaments[0]?.id || null,
+        tournaments: raw.tournaments,
+        updatedAt: raw.updatedAt || raw.lastUpdated || "",
+        lastUpdated: raw.lastUpdated || raw.updatedAt || "",
+        updatedBy: raw.updatedBy || "local"
       };
     }
 
@@ -978,6 +1006,13 @@
 
     async function loadAppState() {
       let loadedFromFirebase = false;
+      let localData = null;
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (saved) {
+        try { localData = normalizeLocalState(JSON.parse(saved)); }
+        catch(e) { localData = null; }
+      }
 
       try {
         setCloudStatus("Firebase: loading...", "saving");
@@ -985,11 +1020,17 @@
         if (response.ok) {
           const cloudData = normalizeCloudState(await response.json());
           if (cloudData) {
-            appState = cloudData;
-            loadedFromFirebase = true;
-            lastCloudSignature = cloudSignature(appState);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-            setCloudStatus("Firebase: synced", "online");
+            if (localData && stateTimeMs(localData) > stateTimeMs(cloudData)) {
+              appState = localData;
+              loadedFromFirebase = false;
+              setCloudStatus("Firebase: local changes pending", "saving");
+            } else {
+              appState = cloudData;
+              loadedFromFirebase = true;
+              lastCloudSignature = cloudSignature(appState);
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+              setCloudStatus("Firebase: synced", "online");
+            }
           }
         } else {
           throw new Error("Firebase load HTTP " + response.status);
@@ -999,16 +1040,13 @@
         setCloudStatus("Firebase: offline backup", "offline");
       }
 
-      if (!loadedFromFirebase) {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          try { appState = JSON.parse(saved); } catch(e) { appState = { activeId: null, tournaments: [] }; }
-        }
+      if (!loadedFromFirebase && (!appState.tournaments || appState.tournaments.length === 0)) {
+        if (localData) appState = localData;
       }
 
       if (!appState.tournaments || appState.tournaments.length === 0) {
         const first = newTournament("Opening Cup");
-        appState = { activeId: first.id, tournaments: [first] };
+        appState = { activeId: first.id, tournaments: [first], updatedAt: new Date().toISOString(), lastUpdated: new Date().toISOString(), updatedBy: CLIENT_ID };
       }
 
       if (!appState.activeId || !appState.tournaments.some(t => t.id === appState.activeId)) {
@@ -1017,12 +1055,13 @@
     }
 
     function saveAppState() {
+      if (!isApplyingCloudUpdate) markLocalChange();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
       if (!cloudReady || isApplyingCloudUpdate) return;
 
       clearTimeout(cloudSaveTimer);
       setCloudStatus("Firebase: saving...", "saving");
-      cloudSaveTimer = setTimeout(saveAppStateToFirebase, 350);
+      cloudSaveTimer = setTimeout(saveAppStateToFirebase, 200);
     }
 
     async function saveAppStateToFirebase() {
@@ -1030,7 +1069,8 @@
         const payload = {
           activeId: appState.activeId,
           tournaments: appState.tournaments,
-          lastUpdated: new Date().toISOString(),
+          updatedAt: appState.updatedAt || new Date().toISOString(),
+          lastUpdated: appState.lastUpdated || appState.updatedAt || new Date().toISOString(),
           updatedBy: CLIENT_ID
         };
 
@@ -1062,8 +1102,27 @@
           if (!cloudData) return;
 
           const incomingSignature = cloudSignature(cloudData);
-          if (incomingSignature === cloudSignature(appState) || incomingSignature === lastCloudSignature) {
+          const localSignature = cloudSignature(appState);
+          const incomingTime = stateTimeMs(cloudData);
+          const localTime = stateTimeMs(appState);
+
+          if (incomingSignature === localSignature) {
+            lastCloudSignature = incomingSignature;
             setCloudStatus("Firebase: synced", "online");
+            return;
+          }
+
+          // Do not let an older cloud copy overwrite a newer local edit.
+          // This fixes rename/create changes reverting on the next 5-second sync.
+          if (incomingTime && localTime && incomingTime < localTime) {
+            setCloudStatus("Firebase: saving newer local copy...", "saving");
+            clearTimeout(cloudSaveTimer);
+            cloudSaveTimer = setTimeout(saveAppStateToFirebase, 100);
+            return;
+          }
+
+          // If this browser made a very recent edit, give its save a chance to finish.
+          if (Date.now() - lastLocalMutationMs < 1500) {
             return;
           }
 
