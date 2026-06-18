@@ -346,6 +346,130 @@
     .chip-text strong { display: block; font-size: 13px; }
     .chip-text span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
 
+
+    .bracket.pro-bracket .round:not(:last-child) .match::before,
+    .bracket.pro-bracket .champion-box::before {
+      content: "";
+      position: absolute;
+      right: -22px;
+      top: 50%;
+      width: 22px;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(56,245,229,0.7), rgba(255,213,106,0.55));
+      box-shadow: 0 0 12px rgba(56,245,229,0.35);
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+
+    .champion-box { position: relative; }
+
+    .team-chip.champion-chip {
+      border-color: rgba(255,213,106,0.75);
+      background: linear-gradient(135deg, rgba(255,213,106,0.18), rgba(56,245,229,0.08));
+      box-shadow: 0 0 28px rgba(255,213,106,0.12);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      margin-top: 6px;
+      border-radius: 999px;
+      background: rgba(56,245,229,0.14);
+      border: 1px solid rgba(56,245,229,0.25);
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+    }
+
+    .pro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .pro-card {
+      position: relative;
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(0,0,0,0.23);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .pro-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,0.10), transparent 46%);
+    }
+
+    .pro-card h3 {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 8px;
+      font-size: 17px;
+      color: var(--text);
+    }
+
+    .pro-card p, .pro-card .muted-note {
+      position: relative;
+      z-index: 1;
+    }
+
+    .result-card {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      min-height: 118px;
+    }
+
+    .result-team {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .result-team.right { justify-content: flex-end; text-align: right; }
+    .result-team strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .result-team span { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+
+    .score-pill {
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(255,213,106,0.22), rgba(56,245,229,0.15));
+      border: 1px solid rgba(255,213,106,0.35);
+      color: var(--gold);
+      font-size: 20px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .recap-box {
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(255,213,106,0.12), rgba(56,245,229,0.09));
+      border: 1px solid rgba(255,213,106,0.25);
+      color: rgba(255,255,255,0.88);
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    @media (max-width: 900px) {
+      .pro-grid { grid-template-columns: 1fr; }
+      .bracket.pro-bracket .round:not(:last-child) .match::before,
+      .bracket.pro-bracket .champion-box::before { display: none; }
+      .result-card { grid-template-columns: 1fr; text-align: left; }
+      .result-team.right { justify-content: flex-start; text-align: left; }
+      .score-pill { width: max-content; }
+    }
+
     .table-wrapper { overflow-x: auto; }
 
     table {
@@ -515,10 +639,14 @@
       <div class="stat-card"><div class="stat-label">Teams Picked</div><div class="stat-value" id="statTeams">0 / 8</div></div>
       <div class="stat-card"><div class="stat-label">Champion</div><div class="stat-value" id="statChampion">-</div></div>
       <div class="stat-card"><div class="stat-label">Golden Boot</div><div class="stat-value" id="statGoldenBoot">-</div></div>
+      <div class="stat-card"><div class="stat-label">Total Matches</div><div class="stat-value" id="statMatches">0</div></div>
+      <div class="stat-card"><div class="stat-label">Biggest Win</div><div class="stat-value" id="statBiggestWin">-</div></div>
+      <div class="stat-card"><div class="stat-label">Most Goals in Match</div><div class="stat-value" id="statMostGoals">-</div></div>
+      <div class="stat-card"><div class="stat-label">Season Record</div><div class="stat-value" id="statSeasonRecord">0 - 0</div></div>
     </section>
 
     <section class="bracket-wrapper">
-      <div class="bracket">
+      <div class="bracket pro-bracket">
         <div class="round">
           <h2 class="round-title">Quarter Finals - Pick 8 Teams</h2>
           <div class="match"><div class="match-label"><span>QF 1</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team1"></span><select id="team1" onchange="updateTeamPick(1)"></select><select id="owner1" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team2"></span><select id="team2" onchange="updateTeamPick(2)"></select><select id="owner2" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
@@ -553,13 +681,13 @@
 
     <section class="section glass-card">
       <div class="section-header">
-        <div><h2>Top Scorer List</h2><div class="muted-note">Team options come from the 8 picked teams. Player suggestions update based on team. Rankings auto-sort by goals.</div></div>
+        <div><h2>Top Scorer List</h2><div class="muted-note">Team options come from the 8 picked teams. Player suggestions update based on team. Type in the custom name field to see team suggestions. Rankings auto-sort by goals.</div></div>
         <button onclick="addScorerRow()">+ Add Scorer</button>
       </div>
       <div class="table-wrapper">
         <table>
           <thead>
-            <tr><th>Rank</th><th>Player</th><th>Team</th><th>Suggested / Custom Name</th><th>Goals</th><th>Owned By</th><th>Headshot URL</th><th></th></tr>
+            <tr><th>Rank</th><th>Player</th><th>Team</th><th>Suggested / Custom Name</th><th>Goals</th><th>Owned By</th><th></th></tr>
           </thead>
           <tbody id="scorerTableBody"></tbody>
         </table>
@@ -585,6 +713,39 @@
           <tbody id="matchHistoryBody"></tbody>
         </table>
       </div>
+    </section>
+
+    <section class="section glass-card">
+      <div class="section-header">
+        <div><h2>Match Result Cards</h2><div class="muted-note">Clean match cards generated from your saved match history.</div></div>
+      </div>
+      <div class="pro-grid" id="matchResultCards"></div>
+    </section>
+
+    <section class="section glass-card">
+      <div class="section-header">
+        <div><h2>Trophy Cabinet</h2><div class="muted-note">Every tournament champion is saved here as your all-time trophy room.</div></div>
+      </div>
+      <div class="pro-grid" id="trophyCabinetGrid"></div>
+    </section>
+
+    <section class="section glass-card">
+      <div class="section-header">
+        <div><h2>All-Time Golden Boot</h2><div class="muted-note">Combines scorer totals from every tournament tab.</div></div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>Total Goals</th><th>Owner</th><th>Tournaments</th></tr></thead>
+          <tbody id="allTimeGoldenBootBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section glass-card">
+      <div class="section-header">
+        <div><h2>Tournament Story Recap</h2><div class="muted-note">Auto-written summary for the current tournament.</div></div>
+      </div>
+      <div class="recap-box" id="storyRecapBox"></div>
     </section>
 
     <section class="section glass-card">
@@ -656,6 +817,49 @@
       "Vinicius Junior": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Vinicius_Junior_2021.jpg/220px-Vinicius_Junior_2021.jpg"
     };
 
+
+    Object.assign(playerSuggestions, {
+      "Australia": ["Mathew Ryan", "Harry Souttar", "Jackson Irvine", "Ajdin Hrustic", "Craig Goodwin", "Martin Boyle", "Riley McGree", "Mitchell Duke", "Kusini Yengi", "Nestory Irankunda"],
+      "Austria": ["David Alaba", "Marcel Sabitzer", "Marko Arnautovic", "Christoph Baumgartner", "Konrad Laimer", "Michael Gregoritsch", "Nicolas Seiwald", "Patrick Wimmer", "Florian Grillitsch", "Stefan Posch"],
+      "Canada": ["Alphonso Davies", "Jonathan David", "Tajon Buchanan", "Cyle Larin", "Stephen Eustaquio", "Ismael Kone", "Jonathan Osorio", "Liam Millar", "Jacob Shaffelburg", "Moise Bombito"],
+      "Colombia": ["Luis Diaz", "James Rodriguez", "Jhon Duran", "Rafael Santos Borre", "Luis Sinisterra", "Jorge Carrascal", "Jefferson Lerma", "Richard Rios", "Daniel Munoz", "Davinson Sanchez"],
+      "Croatia": ["Luka Modric", "Mateo Kovacic", "Marcelo Brozovic", "Ivan Perisic", "Andrej Kramaric", "Bruno Petkovic", "Lovro Majer", "Mario Pasalic", "Josko Gvardiol", "Luka Sucic"],
+      "Denmark": ["Christian Eriksen", "Rasmus Hojlund", "Pierre-Emile Hojbjerg", "Mikkel Damsgaard", "Andreas Christensen", "Joachim Andersen", "Yussuf Poulsen", "Jonas Wind", "Kasper Dolberg", "Simon Kjaer"],
+      "Ghana": ["Mohammed Kudus", "Thomas Partey", "Inaki Williams", "Jordan Ayew", "Andre Ayew", "Antoine Semenyo", "Ernest Nuamah", "Kamaldeen Sulemana", "Tariq Lamptey", "Alexander Djiku"],
+      "Japan": ["Takefusa Kubo", "Kaoru Mitoma", "Daichi Kamada", "Takumi Minamino", "Ritsu Doan", "Hidemasa Morita", "Wataru Endo", "Ayase Ueda", "Daizen Maeda", "Ko Itakura"],
+      "Mexico": ["Hirving Lozano", "Santiago Gimenez", "Raul Jimenez", "Edson Alvarez", "Orbelin Pineda", "Uriel Antuna", "Luis Chavez", "Roberto Alvarado", "Johan Vasquez", "Guillermo Ochoa"],
+      "Morocco": ["Achraf Hakimi", "Hakim Ziyech", "Youssef En-Nesyri", "Sofiane Boufal", "Amine Harit", "Azzedine Ounahi", "Sofyan Amrabat", "Brahim Diaz", "Noussair Mazraoui", "Nayef Aguerd"],
+      "Norway": ["Erling Haaland", "Martin Odegaard", "Alexander Sorloth", "Antonio Nusa", "Oscar Bobb", "Sander Berge", "Kristoffer Ajer", "Fredrik Aursnes", "Julian Ryerson", "Leo Ostigard"],
+      "Poland": ["Robert Lewandowski", "Piotr Zielinski", "Arkadiusz Milik", "Karol Swiderski", "Nicola Zalewski", "Jakub Kiwior", "Sebastian Szymanski", "Przemyslaw Frankowski", "Matty Cash", "Wojciech Szczesny"],
+      "Senegal": ["Sadio Mane", "Nicolas Jackson", "Ismaila Sarr", "Habib Diallo", "Iliman Ndiaye", "Pape Matar Sarr", "Idrissa Gueye", "Kalidou Koulibaly", "Edouard Mendy", "Boulaye Dia"],
+      "South Korea": ["Son Heung-min", "Kim Min-jae", "Lee Kang-in", "Hwang Hee-chan", "Cho Gue-sung", "Hwang Ui-jo", "Jeong Woo-yeong", "Hong Hyun-seok", "Hwang In-beom", "Lee Jae-sung"],
+      "Sweden": ["Alexander Isak", "Dejan Kulusevski", "Viktor Gyokeres", "Anthony Elanga", "Emil Forsberg", "Viktor Claesson", "Robin Quaison", "Jesper Karlsson", "Ludwig Augustinsson", "Victor Lindelof"],
+      "Switzerland": ["Granit Xhaka", "Xherdan Shaqiri", "Breel Embolo", "Noah Okafor", "Zeki Amdouni", "Ruben Vargas", "Remo Freuler", "Manuel Akanji", "Fabian Schar", "Yann Sommer"],
+      "Turkey": ["Hakan Calhanoglu", "Arda Guler", "Kenan Yildiz", "Kerem Akturkoglu", "Cenk Tosun", "Baris Alper Yilmaz", "Orkun Kokcu", "Yunus Akgun", "Merih Demiral", "Ferdi Kadioglu"],
+      "Uruguay": ["Luis Suarez", "Darwin Nunez", "Federico Valverde", "Rodrigo Bentancur", "Giorgian De Arrascaeta", "Facundo Pellistri", "Maxi Araujo", "Manuel Ugarte", "Jose Gimenez", "Ronald Araujo"],
+      "USA": ["Christian Pulisic", "Gio Reyna", "Tim Weah", "Folarin Balogun", "Ricardo Pepi", "Weston McKennie", "Yunus Musah", "Tyler Adams", "Sergino Dest", "Antonee Robinson"],
+      "Tottenham": ["Son Heung-min", "James Maddison", "Dejan Kulusevski", "Richarlison", "Brennan Johnson", "Timo Werner", "Dominic Solanke", "Pedro Porro", "Cristian Romero", "Micky van de Ven"],
+      "Borussia Dortmund": ["Julian Brandt", "Karim Adeyemi", "Donyell Malen", "Niclas Fullkrug", "Marco Reus", "Sebastien Haller", "Youssoufa Moukoko", "Jamie Bynoe-Gittens", "Emre Can", "Gregor Kobel"],
+      "Inter Milan": ["Lautaro Martinez", "Marcus Thuram", "Nicolo Barella", "Hakan Calhanoglu", "Federico Dimarco", "Henrikh Mkhitaryan", "Denzel Dumfries", "Davide Frattesi", "Marko Arnautovic", "Yann Sommer"],
+      "AC Milan": ["Rafael Leao", "Christian Pulisic", "Olivier Giroud", "Theo Hernandez", "Samuel Chukwueze", "Noah Okafor", "Ruben Loftus-Cheek", "Tijjani Reijnders", "Yunus Musah", "Mike Maignan"],
+      "Juventus": ["Dusan Vlahovic", "Federico Chiesa", "Arkadiusz Milik", "Kenan Yildiz", "Filip Kostic", "Adrien Rabiot", "Weston McKennie", "Manuel Locatelli", "Bremer", "Wojciech Szczesny"],
+      "Napoli": ["Victor Osimhen", "Khvicha Kvaratskhelia", "Matteo Politano", "Giacomo Raspadori", "Giovanni Simeone", "Piotr Zielinski", "Stanislav Lobotka", "Andre-Frank Zambo Anguissa", "Giovanni Di Lorenzo", "Alex Meret"],
+      "Atletico Madrid": ["Antoine Griezmann", "Alvaro Morata", "Memphis Depay", "Angel Correa", "Rodrigo De Paul", "Marcos Llorente", "Koke", "Samuel Lino", "Jose Maria Gimenez", "Jan Oblak"],
+      "Bayer Leverkusen": ["Florian Wirtz", "Victor Boniface", "Patrik Schick", "Alejandro Grimaldo", "Jeremie Frimpong", "Jonas Hofmann", "Amine Adli", "Granit Xhaka", "Exequiel Palacios", "Edmond Tapsoba"],
+      "RB Leipzig": ["Benjamin Sesko", "Xavi Simons", "Lois Openda", "Dani Olmo", "Christoph Baumgartner", "Yussuf Poulsen", "Emil Forsberg", "Amadou Haidara", "David Raum", "Peter Gulacsi"],
+      "Ajax": ["Brian Brobbey", "Steven Bergwijn", "Bertrand Traore", "Chuba Akpom", "Kenneth Taylor", "Steven Berghuis", "Carlos Forbs", "Jordan Henderson", "Josip Sutalo", "Geronimo Rulli"],
+      "Benfica": ["Angel Di Maria", "Rafa Silva", "Arthur Cabral", "Joao Mario", "David Neres", "Orkun Kokcu", "Florentino Luis", "Antonio Silva", "Nicolas Otamendi", "Anatoliy Trubin"],
+      "Porto": ["Mehdi Taremi", "Evanilson", "Pepe", "Francisco Conceicao", "Galeno", "Wendell", "Stephen Eustaquio", "Alan Varela", "Diogo Costa", "Otavio"],
+      "Sporting CP": ["Viktor Gyokeres", "Pedro Goncalves", "Francisco Trincao", "Marcus Edwards", "Paulinho", "Morten Hjulmand", "Hidemasa Morita", "Goncalo Inacio", "Ousmane Diomande", "Antonio Adan"],
+      "Roma": ["Paulo Dybala", "Romelu Lukaku", "Lorenzo Pellegrini", "Stephan El Shaarawy", "Tammy Abraham", "Andrea Belotti", "Bryan Cristante", "Leandro Paredes", "Gianluca Mancini", "Rui Patricio"],
+      "Lazio": ["Ciro Immobile", "Mattia Zaccagni", "Felipe Anderson", "Luis Alberto", "Pedro", "Gustav Isaksen", "Matteo Guendouzi", "Daichi Kamada", "Alessio Romagnoli", "Ivan Provedel"],
+      "Newcastle United": ["Alexander Isak", "Anthony Gordon", "Callum Wilson", "Bruno Guimaraes", "Harvey Barnes", "Miguel Almiron", "Joelinton", "Sandro Tonali", "Kieran Trippier", "Nick Pope"],
+      "Aston Villa": ["Ollie Watkins", "Leon Bailey", "Moussa Diaby", "John McGinn", "Youri Tielemans", "Jacob Ramsey", "Morgan Rogers", "Douglas Luiz", "Pau Torres", "Emiliano Martinez"],
+      "West Ham": ["Jarrod Bowen", "Mohammed Kudus", "Lucas Paqueta", "Michail Antonio", "Danny Ings", "James Ward-Prowse", "Tomas Soucek", "Edson Alvarez", "Kurt Zouma", "Alphonse Areola"],
+      "Sevilla": ["Youssef En-Nesyri", "Lucas Ocampos", "Suso", "Dodi Lukebakio", "Erik Lamela", "Isaac Romero", "Oliver Torres", "Ivan Rakitic", "Sergio Ramos", "Orjan Nyland"],
+      "Villarreal": ["Gerard Moreno", "Alexander Sorloth", "Jose Luis Morales", "Yeremy Pino", "Alex Baena", "Dani Parejo", "Etienne Capoue", "Santi Comesana", "Raul Albiol", "Filip Jorgensen"]
+    });
+
     const qfTeamIds = ["team1","team2","team3","team4","team5","team6","team7","team8"];
     const ownerIds = ["owner1","owner2","owner3","owner4","owner5","owner6","owner7","owner8"];
     const semiIds = ["semi1","semi2","semi3","semi4"];
@@ -712,8 +916,8 @@
           scoreSemi1: "", scoreSemi2: "", scoreFinal: "",
           matchHistory: [],
           scorers: [
-            { player: "", team: "Select Team", goals: 0, owner: "Joel", photo: "" },
-            { player: "", team: "Select Team", goals: 0, owner: "Joshua", photo: "" }
+            { player: "", team: "Select Team", goals: 0, owner: "Joel" },
+            { player: "", team: "Select Team", goals: 0, owner: "Joshua" }
           ]
         }
       };
@@ -798,6 +1002,10 @@
       renderPickedTeams();
       renderScorers();
       renderMatchHistory();
+      renderMatchResultCards();
+      renderTrophyCabinet();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       renderRivalryStats();
       drawChampionCard();
       updateStats();
@@ -812,6 +1020,10 @@
       });
       saveAppState();
       renderPickedTeams();
+      renderMatchResultCards();
+      renderTrophyCabinet();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       renderRivalryStats();
       drawChampionCard();
       updateStats();
@@ -878,8 +1090,10 @@
       }
       picked.forEach((item, index) => {
         const div = document.createElement("div");
-        div.className = "team-chip";
-        div.innerHTML = `<span class="team-icon">${getTeamIcon(item.team)}</span><div class="chip-text"><strong>${index + 1}. ${item.team}</strong><span>Owned by ${item.owner}</span></div>`;
+        const d = activeTournament().data;
+        const status = d.champion === item.team ? "Champion" : finalIds.some(id => d[id] === item.team) ? "Finalist" : semiIds.some(id => d[id] === item.team) ? "Semi Final" : "Quarter Final";
+        div.className = "team-chip" + (status === "Champion" ? " champion-chip" : "");
+        div.innerHTML = `<span class="team-icon">${getTeamIcon(item.team)}</span><div class="chip-text"><strong>${index + 1}. ${item.team}</strong><span>Owned by ${item.owner}</span><span class="status-badge">${status}</span></div>`;
         grid.appendChild(div);
       });
     }
@@ -891,7 +1105,7 @@
     }
 
     function getPlayerOptions(team) {
-      return playerSuggestions[team] || ["Add Custom Player"];
+      return playerSuggestions[team] || [];
     }
 
     function playerInitials(name) {
@@ -899,8 +1113,14 @@
       return name.split(" ").filter(Boolean).slice(0,2).map(x => x[0]).join("").toUpperCase();
     }
 
+    function getHeadshotUrl(playerName) {
+      if (!playerName) return "";
+      if (knownHeadshots[playerName]) return knownHeadshots[playerName];
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=111827&color=ffffff&size=128&bold=true`;
+    }
+
     function headshotHtml(scorer) {
-      const url = scorer.photo || knownHeadshots[scorer.player] || "";
+      const url = getHeadshotUrl(scorer.player);
       if (url) return `<img src="${escapeAttr(url)}" onerror="this.outerHTML='${playerInitials(scorer.player)}'" alt="${escapeAttr(scorer.player)}">`;
       return playerInitials(scorer.player);
     }
@@ -908,9 +1128,12 @@
     function addScorerRow() {
       const t = activeTournament();
       const firstTeam = getPickedTeams()[0]?.team || "Select Team";
-      t.data.scorers.push({ player: "", team: firstTeam, goals: 0, owner: getOwnerForTeam(firstTeam), photo: "" });
+      t.data.scorers.push({ player: "", team: firstTeam, goals: 0, owner: getOwnerForTeam(firstTeam) });
       saveAppState();
       renderScorers();
+      renderTrophyCabinet();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       renderRivalryStats();
       drawChampionCard();
       updateStats();
@@ -921,6 +1144,8 @@
       t.data.scorers.splice(originalIndex, 1);
       saveAppState();
       renderScorers();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       updateStats();
     }
 
@@ -932,9 +1157,10 @@
         const suggested = getPlayerOptions(value);
         if (!suggested.includes(scorer.player)) scorer.player = "";
       }
-      if (field === "player" && knownHeadshots[value] && !scorer.photo) scorer.photo = knownHeadshots[value];
       saveAppState();
       renderScorers();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       updateStats();
     }
 
@@ -954,30 +1180,92 @@
       sorted.forEach((scorer, rankIndex) => {
         const teamOptions = ["Select Team"].concat(validTeams).map(team => `<option value="${escapeAttr(team)}" ${team === scorer.team ? "selected" : ""}>${team === "Select Team" ? "⚽" : ""} ${escapeAttr(team)}</option>`).join("");
         const suggestions = getPlayerOptions(scorer.team);
-        const suggestionOptions = [`<option value="">Choose / type player</option>`].concat(suggestions.map(name => `<option value="${escapeAttr(name)}" ${name === scorer.player ? "selected" : ""}>${escapeAttr(name)}</option>`)).join("");
+        const suggestionOptions = [`<option value="">Choose player</option>`].concat(suggestions.map(name => `<option value="${escapeAttr(name)}" ${name === scorer.player ? "selected" : ""}>${escapeAttr(name)}</option>`)).join("");
+        const datalistId = `player-list-${scorer.originalIndex}`;
+        const datalistOptions = suggestions.map(name => `<option value="${escapeAttr(name)}"></option>`).join("");
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><span class="rank-badge">${rankIndex + 1}</span></td>
           <td><div class="player-cell"><span class="headshot">${headshotHtml(scorer)}</span><strong>${escapeAttr(scorer.player || "New Scorer")}</strong></div></td>
           <td><select onchange="updateScorer(${scorer.originalIndex}, 'team', this.value)">${teamOptions}</select></td>
-          <td><select onchange="updateScorer(${scorer.originalIndex}, 'player', this.value)">${suggestionOptions}</select><input style="margin-top:8px" value="${escapeAttr(scorer.player)}" placeholder="Or type custom player" oninput="updateScorer(${scorer.originalIndex}, 'player', this.value)"></td>
+          <td>
+            <select onchange="updateScorer(${scorer.originalIndex}, 'player', this.value)">${suggestionOptions}</select>
+            <input style="margin-top:8px" list="${datalistId}" value="${escapeAttr(scorer.player)}" placeholder="Type player name — suggestions from selected team" oninput="updateScorer(${scorer.originalIndex}, 'player', this.value)">
+            <datalist id="${datalistId}">${datalistOptions}</datalist>
+          </td>
           <td><input type="number" min="0" value="${Number(scorer.goals || 0)}" oninput="updateScorer(${scorer.originalIndex}, 'goals', this.value)"></td>
           <td><select onchange="updateScorer(${scorer.originalIndex}, 'owner', this.value)"><option ${scorer.owner === "Joel" ? "selected" : ""}>Joel</option><option ${scorer.owner === "Joshua" ? "selected" : ""}>Joshua</option></select></td>
-          <td><input value="${escapeAttr(scorer.photo || "")}" placeholder="Optional image URL" oninput="updateScorer(${scorer.originalIndex}, 'photo', this.value)"></td>
           <td><button class="small-danger" onclick="deleteScorerRow(${scorer.originalIndex})">Delete</button></td>
         `;
         tbody.appendChild(tr);
       });
     }
 
+    function parseScoreNumbers(score) {
+      if (!score) return null;
+      const nums = String(score).match(/\d+/g);
+      if (!nums || nums.length < 2) return null;
+      const a = Number(nums[nums.length - 2]);
+      const b = Number(nums[nums.length - 1]);
+      if (Number.isNaN(a) || Number.isNaN(b)) return null;
+      return [a, b];
+    }
+
+    function getGlobalStats() {
+      const totals = {
+        Joel: { wins: 0, trophies: 0, goals: 0 },
+        Joshua: { wins: 0, trophies: 0, goals: 0 },
+        matches: 0,
+        biggestWin: null,
+        mostGoals: null
+      };
+
+      appState.tournaments.forEach(t => {
+        const d = t.data || {};
+        const championOwner = d.champion && d.champion !== "Select Team" ? ownerOfTeamFromTournament(d, d.champion) : null;
+        if (championOwner && totals[championOwner]) totals[championOwner].trophies++;
+
+        (d.scorers || []).forEach(s => {
+          const owner = s.owner || ownerOfTeamFromTournament(d, s.team);
+          if (totals[owner]) totals[owner].goals += Number(s.goals || 0);
+        });
+
+        (d.matchHistory || []).forEach(match => {
+          if (!match.teamA || !match.teamB || match.teamA === "Select Team" || match.teamB === "Select Team") return;
+          totals.matches++;
+          const winnerOwner = match.winner && match.winner !== "Select Team" ? ownerOfTeamFromTournament(d, match.winner) : null;
+          if (winnerOwner && totals[winnerOwner]) totals[winnerOwner].wins++;
+
+          const parsed = parseScoreNumbers(match.score);
+          if (parsed) {
+            const [a, b] = parsed;
+            const totalGoals = a + b;
+            const diff = Math.abs(a - b);
+            if (!totals.mostGoals || totalGoals > totals.mostGoals.total) {
+              totals.mostGoals = { total: totalGoals, label: `${match.teamA} ${a}-${b} ${match.teamB}` };
+            }
+            if (!totals.biggestWin || diff > totals.biggestWin.diff) {
+              totals.biggestWin = { diff, label: `${match.teamA} ${a}-${b} ${match.teamB}` };
+            }
+          }
+        });
+      });
+      return totals;
+    }
+
     function updateStats() {
       const t = activeTournament();
       const picked = getPickedTeams();
       const scorers = (t.data.scorers || []).slice().sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0));
+      const global = getGlobalStats();
       document.getElementById("statTournament").textContent = t.name;
       document.getElementById("statTeams").textContent = `${picked.length} / 8`;
       document.getElementById("statChampion").textContent = document.getElementById("champion").value === "Select Team" ? "-" : document.getElementById("champion").value;
       document.getElementById("statGoldenBoot").textContent = scorers[0] && scorers[0].player ? `${scorers[0].player} (${scorers[0].goals || 0})` : "-";
+      document.getElementById("statMatches").textContent = global.matches;
+      document.getElementById("statBiggestWin").textContent = global.biggestWin ? global.biggestWin.label : "-";
+      document.getElementById("statMostGoals").textContent = global.mostGoals ? `${global.mostGoals.total}` : "-";
+      document.getElementById("statSeasonRecord").textContent = `${global.Joel.wins} - ${global.Joshua.wins}`;
     }
 
 
@@ -1028,6 +1316,10 @@
       });
       saveAppState();
       renderMatchHistory();
+      renderMatchResultCards();
+      renderTrophyCabinet();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       renderRivalryStats();
       drawChampionCard();
     }
@@ -1051,6 +1343,10 @@
       else match[field] = value;
       saveAppState();
       renderMatchHistory();
+      renderMatchResultCards();
+      renderTrophyCabinet();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       renderRivalryStats();
       drawChampionCard();
     }
@@ -1060,6 +1356,10 @@
       t.data.matchHistory.splice(index, 1);
       saveAppState();
       renderMatchHistory();
+      renderMatchResultCards();
+      renderTrophyCabinet();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       renderRivalryStats();
       drawChampionCard();
     }
@@ -1116,6 +1416,98 @@
     function ownerOfTeamFromTournament(data, team) {
       for (let i = 1; i <= 8; i++) if (data["team" + i] === team) return data["owner" + i] || "Joel";
       return "-";
+    }
+
+
+    function renderMatchResultCards() {
+      const wrap = document.getElementById("matchResultCards");
+      if (!wrap) return;
+      const d = activeTournament().data;
+      const matches = (d.matchHistory || []).filter(m => m.teamA && m.teamB && m.teamA !== "Select Team" && m.teamB !== "Select Team");
+      if (!matches.length) {
+        wrap.innerHTML = `<div class="muted-note">No result cards yet. Use Auto Build From Bracket or add a manual match.</div>`;
+        return;
+      }
+      wrap.innerHTML = matches.map(match => {
+        const ownerA = getOwnerForTeam(match.teamA);
+        const ownerB = getOwnerForTeam(match.teamB);
+        const pens = match.penalties ? `<span class="status-badge">Pens ${escapeAttr(match.penA || "-")} - ${escapeAttr(match.penB || "-")}</span>` : "";
+        return `
+          <div class="pro-card result-card">
+            <div class="result-team"><span class="team-icon">${getTeamIcon(match.teamA)}</span><div><strong>${escapeAttr(match.teamA)}</strong><span>${escapeAttr(ownerA)}</span></div></div>
+            <div><div class="score-pill">${escapeAttr(match.score || "vs")}</div>${pens}<div class="muted-note" style="text-align:center;margin-top:8px">${escapeAttr(match.stage || "Match")}</div></div>
+            <div class="result-team right"><div><strong>${escapeAttr(match.teamB)}</strong><span>${escapeAttr(ownerB)}</span></div><span class="team-icon">${getTeamIcon(match.teamB)}</span></div>
+          </div>`;
+      }).join("");
+    }
+
+    function renderTrophyCabinet() {
+      const grid = document.getElementById("trophyCabinetGrid");
+      if (!grid) return;
+      const winners = appState.tournaments
+        .filter(t => t.data && t.data.champion && t.data.champion !== "Select Team")
+        .map(t => ({ tournament: t.name, champion: t.data.champion, owner: ownerOfTeamFromTournament(t.data, t.data.champion), score: t.data.scoreFinal || "Final score pending" }));
+      if (!winners.length) {
+        grid.innerHTML = `<div class="muted-note">No trophies yet. Choose a champion in any tournament to fill the cabinet.</div>`;
+        return;
+      }
+      grid.innerHTML = winners.map(w => `
+        <div class="pro-card">
+          <h3>🏆 ${escapeAttr(w.tournament)}</h3>
+          <div class="result-team"><span class="team-icon">${getTeamIcon(w.champion)}</span><div><strong>${escapeAttr(w.champion)}</strong><span>Owned by ${escapeAttr(w.owner)}</span></div></div>
+          <p class="muted-note">${escapeAttr(w.score)}</p>
+        </div>
+      `).join("");
+    }
+
+    function renderAllTimeGoldenBoot() {
+      const body = document.getElementById("allTimeGoldenBootBody");
+      if (!body) return;
+      const map = new Map();
+      appState.tournaments.forEach(t => {
+        (t.data.scorers || []).forEach(s => {
+          if (!s.player) return;
+          const key = `${s.player}__${s.team}__${s.owner || ownerOfTeamFromTournament(t.data, s.team)}`;
+          const current = map.get(key) || { player: s.player, team: s.team, owner: s.owner || ownerOfTeamFromTournament(t.data, s.team), goals: 0, tournaments: new Set() };
+          current.goals += Number(s.goals || 0);
+          current.tournaments.add(t.name);
+          map.set(key, current);
+        });
+      });
+      const rows = [...map.values()].sort((a,b) => b.goals - a.goals);
+      if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="6" class="muted-note">No all-time scorers yet.</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map((r, i) => `
+        <tr>
+          <td><span class="rank-badge">${i + 1}</span></td>
+          <td><strong>${escapeAttr(r.player)}</strong></td>
+          <td>${escapeAttr(r.team)}</td>
+          <td>${r.goals}</td>
+          <td>${escapeAttr(r.owner)}</td>
+          <td>${escapeAttr([...r.tournaments].join(", "))}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderStoryRecap() {
+      const box = document.getElementById("storyRecapBox");
+      if (!box) return;
+      const t = activeTournament();
+      const d = t.data;
+      const champion = d.champion && d.champion !== "Select Team" ? d.champion : null;
+      const championOwner = champion ? ownerOfTeamFromTournament(d, champion) : null;
+      const golden = (d.scorers || []).slice().sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0))[0];
+      const finalTeams = [d.final1, d.final2].filter(x => x && x !== "Select Team");
+      const finalText = finalTeams.length === 2 ? `${escapeAttr(finalTeams[0])} vs ${escapeAttr(finalTeams[1])}` : "the final matchup is still pending";
+      const scoreText = d.scoreFinal ? ` The final score was ${escapeAttr(d.scoreFinal)}.` : "";
+      const goldenText = golden && golden.player ? ` ${escapeAttr(golden.player)} leads the scoring race with ${Number(golden.goals || 0)} goals for ${escapeAttr(golden.team)}.` : " The Golden Boot race is still open.";
+      if (!champion) {
+        box.innerHTML = `${escapeAttr(t.name)} is still in progress. ${finalText.charAt(0).toUpperCase() + finalText.slice(1)}.${goldenText}`;
+        return;
+      }
+      box.innerHTML = `${escapeAttr(championOwner)} captured the ${escapeAttr(t.name)} trophy with ${escapeAttr(champion)} after a road to the final that ended with ${finalText}.${scoreText}${goldenText}`;
     }
 
     function renderRivalryStats() {
@@ -1218,6 +1610,10 @@
     function renderAll() {
       renderTournamentTabs();
       renderFormFromData();
+      renderMatchResultCards();
+      renderTrophyCabinet();
+      renderAllTimeGoldenBoot();
+      renderStoryRecap();
       saveAppState();
     }
 
