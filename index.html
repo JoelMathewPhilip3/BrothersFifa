@@ -3,836 +3,1226 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Joel vs Joshua FIFA Tournament</title>
+  <title>FIFA 25 Tournament Hub | Joel vs Joshua</title>
 
   <style>
-    * {
-      box-sizing: border-box;
+    :root {
+      --bg: #070914;
+      --panel: rgba(255,255,255,0.08);
+      --panel-strong: rgba(255,255,255,0.14);
+      --line: rgba(255,255,255,0.18);
+      --line-bright: rgba(255,255,255,0.35);
+      --text: #f8fbff;
+      --muted: #aab4c8;
+      --gold: #ffd56a;
+      --cyan: #38f5e5;
+      --blue: #7da7ff;
+      --red: #ff4d6d;
+      --green: #4cff93;
+      --shadow: 0 20px 60px rgba(0,0,0,0.45);
     }
+
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: radial-gradient(circle at center, #7b0024, #24000d 80%);
-      color: white;
       min-height: 100vh;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(56,245,229,0.20), transparent 32%),
+        radial-gradient(circle at 85% 10%, rgba(255,213,106,0.15), transparent 30%),
+        radial-gradient(circle at 50% 95%, rgba(125,167,255,0.18), transparent 34%),
+        linear-gradient(135deg, #090b18, #171026 50%, #070914);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent 82%);
     }
 
     header {
+      position: relative;
+      padding: 28px 18px 14px;
       text-align: center;
-      padding: 30px 15px 10px;
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 34px;
-      letter-spacing: 2px;
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      backdrop-filter: blur(14px);
+    }
+
+    h1 {
+      margin: 16px 0 8px;
+      font-size: clamp(30px, 5vw, 58px);
+      line-height: 1;
+      letter-spacing: -1.5px;
       text-transform: uppercase;
     }
 
     header p {
-      margin-top: 8px;
-      color: #ddd;
+      margin: 0 auto;
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
     }
 
-    .trophy {
-      font-size: 60px;
-      margin-top: 10px;
-    }
-
-    .tabs {
+    .top-actions, .tournament-tabs {
+      position: relative;
       display: flex;
+      align-items: center;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 10px;
-      margin: 20px auto;
-      padding: 0 15px;
+      padding: 0 18px;
+      margin: 18px auto 0;
     }
 
-    .tab-button {
-      padding: 12px 24px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.15);
-      color: white;
-      font-weight: bold;
+    .tournament-tabs {
+      max-width: 1200px;
+      justify-content: flex-start;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    button, .ghost-button, .tab-button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, var(--cyan), #7dfff4);
+      color: #061014;
+      font-weight: 900;
       cursor: pointer;
+      box-shadow: 0 12px 32px rgba(56,245,229,0.18);
+      transition: transform 0.15s ease, background 0.15s ease, border 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .ghost-button, .tab-button {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: none;
+      backdrop-filter: blur(12px);
     }
 
     .tab-button.active {
-      background: #00e0d5;
-      color: #111;
+      background: linear-gradient(135deg, rgba(255,213,106,0.95), rgba(56,245,229,0.95));
+      color: #081018;
+      border-color: transparent;
     }
 
-    .tab-content {
-      display: none;
+    .danger-button, .small-danger { background: var(--red); color: white; box-shadow: none; }
+    .small-danger { padding: 8px 10px; border-radius: 10px; font-size: 12px; }
+
+    .page-shell {
+      position: relative;
+      max-width: 1320px;
+      margin: 18px auto 60px;
+      padding: 0 18px;
     }
 
-    .tab-content.active {
-      display: block;
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card, .glass-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.055));
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .stat-card {
+      padding: 16px;
+      min-height: 92px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 800;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      font-size: 26px;
+      font-weight: 950;
+      color: var(--gold);
     }
 
     .bracket-wrapper {
-      width: 100%;
       overflow-x: auto;
-      padding: 25px;
+      padding: 22px;
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.22);
+      box-shadow: var(--shadow);
     }
 
     .bracket {
-      min-width: 1100px;
+      min-width: 1050px;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-      gap: 30px;
+      grid-template-columns: 1.35fr 1fr 0.95fr 0.8fr;
+      gap: 22px;
       align-items: center;
     }
 
-    .round {
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
+    .round { display: flex; flex-direction: column; gap: 18px; }
 
-    .round h2,
-    .player-section h2,
-    .scorer-section h2 {
-      text-align: center;
-      color: #00e0d5;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .round h2 {
-      font-size: 15px;
+    .round-title, .section-title {
       margin: 0 0 10px;
+      text-align: center;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-size: 14px;
+      font-weight: 950;
     }
 
     .match {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.35);
-      border-radius: 8px;
-      padding: 12px;
-      min-height: 118px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      position: relative;
+      min-height: 148px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.075);
+    }
+
+    .match::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 40%);
+    }
+
+    .match-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
     }
 
     .team-row {
-      display: flex;
-      align-items: center;
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 38px 1fr 92px;
       gap: 8px;
+      align-items: center;
       margin-bottom: 10px;
     }
 
-    .team-row:last-child {
-      margin-bottom: 0;
-    }
+    .team-row.simple { grid-template-columns: 38px 1fr; }
+    .team-row:last-child { margin-bottom: 0; }
 
-    .team-icon {
-      width: 34px;
-      height: 34px;
-      min-width: 34px;
+    .team-icon, .headshot {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 23px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 50%;
       overflow: hidden;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.20);
+      font-size: 24px;
     }
 
-    .team-icon img {
-      width: 26px;
-      height: 26px;
-      object-fit: contain;
+    .team-icon img, .headshot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
     }
 
-    select,
-    input {
+    select, input {
       width: 100%;
-      padding: 8px;
-      border-radius: 5px;
-      border: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      padding: 10px 11px;
+      background: rgba(255,255,255,0.93);
+      color: #111827;
       font-size: 14px;
       outline: none;
     }
 
-    .center-area {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      justify-content: center;
-      align-items: center;
-    }
+    input::placeholder { color: #6b7280; }
 
-    .final-box {
-      width: 100%;
-      background: rgba(255,215,0,0.15);
-      border: 2px solid gold;
-      border-radius: 10px;
-      padding: 18px;
-    }
-
-    .champion {
-      background: linear-gradient(135deg, #ffd700, #b8860b);
-      color: #24000d;
-      font-weight: bold;
-      padding: 18px;
-      border-radius: 12px;
-      width: 100%;
-      box-shadow: 0 0 25px rgba(255,215,0,0.5);
-    }
-
-    .champion h2 {
-      margin: 0 0 12px;
-      color: #24000d;
-    }
-
-    .player-section,
-    .scorer-section {
-      max-width: 1050px;
-      margin: 20px auto 40px;
+    .champion-box {
       padding: 20px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 12px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,213,106,0.72);
+      background: linear-gradient(135deg, rgba(255,213,106,0.22), rgba(56,245,229,0.10));
+      box-shadow: 0 0 45px rgba(255,213,106,0.18);
     }
 
-    .player-grid {
+    .score-card {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 18px;
+      gap: 10px;
+      padding: 16px;
     }
 
-    .player-card {
-      background: rgba(0,0,0,0.25);
-      padding: 15px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.25);
+    .score-card label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 850;
     }
 
-    .player-card label {
-      display: block;
-      font-size: 13px;
-      margin: 8px 0 5px;
-      color: #ddd;
+    .section {
+      margin-top: 18px;
+      padding: 22px;
     }
 
-    .table-wrapper {
-      overflow-x: auto;
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
     }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.3px;
+    }
+
+    .picked-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .team-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--line);
+      min-height: 58px;
+    }
+
+    .chip-text strong { display: block; font-size: 13px; }
+    .chip-text span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+
+    .table-wrapper { overflow-x: auto; }
 
     table {
       width: 100%;
-      min-width: 850px;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-
-    th,
-    td {
-      border: 1px solid rgba(255,255,255,0.25);
-      padding: 9px;
-      text-align: center;
+      min-width: 980px;
+      border-collapse: separate;
+      border-spacing: 0 10px;
     }
 
     th {
-      background: rgba(0,224,213,0.25);
+      padding: 10px;
+      color: var(--muted);
+      text-align: left;
       text-transform: uppercase;
-      font-size: 13px;
-      letter-spacing: 1px;
+      font-size: 12px;
+      letter-spacing: 0.8px;
     }
 
     td {
-      background: rgba(0,0,0,0.25);
+      padding: 10px;
+      background: rgba(255,255,255,0.075);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
     }
 
-    td input,
-    td select {
-      text-align: center;
+    td:first-child { border-left: 1px solid var(--line); border-radius: 15px 0 0 15px; }
+    td:last-child { border-right: 1px solid var(--line); border-radius: 0 15px 15px 0; }
+
+    .rank-badge {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,213,106,0.15);
+      color: var(--gold);
+      font-weight: 950;
+      border: 1px solid rgba(255,213,106,0.35);
     }
 
-    .buttons {
-      text-align: center;
-      margin: 20px 0 40px;
+    .player-cell {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      align-items: center;
+      gap: 10px;
     }
 
-    button {
-      padding: 12px 22px;
-      border: none;
-      border-radius: 8px;
-      background: #00e0d5;
-      color: #111;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 15px;
-      margin: 5px;
+    .headshot {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      font-size: 14px;
+      font-weight: 950;
+      background: linear-gradient(135deg, rgba(56,245,229,0.28), rgba(255,213,106,0.18));
     }
 
-    button:hover {
-      background: #00fff2;
+    .muted-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
     }
 
-    .danger-button {
-      background: #ff4d6d;
-      color: white;
+    .premium-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
     }
 
-    .danger-button:hover {
-      background: #ff6f89;
+    .premium-list li {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.065);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      line-height: 1.45;
     }
 
-    .small-danger {
-      padding: 7px 10px;
-      background: #ff4d6d;
-      color: white;
-      font-size: 12px;
+    .premium-list strong { color: var(--text); display: block; margin-bottom: 4px; }
+
+
+    .section-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .rivalry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 16px;
     }
 
-    @media (max-width: 700px) {
-      header h1 {
-        font-size: 25px;
-      }
+    .rivalry-card {
+      background: rgba(0,0,0,0.24);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    }
 
-      .tabs,
-      .player-grid {
-        grid-template-columns: 1fr;
-        flex-direction: column;
-      }
+    .rivalry-card strong {
+      display: block;
+      font-size: 26px;
+      margin-top: 8px;
+      color: var(--gold);
+    }
 
-      .bracket-wrapper {
-        padding: 15px;
-      }
+    .champion-card-wrap {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 10px 0 0;
+    }
+
+    #championCanvas {
+      width: min(100%, 520px);
+      height: auto;
+      border-radius: 24px;
+      border: 1px solid var(--line-bright);
+      box-shadow: var(--shadow);
+      background: #111;
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .stats-grid, .picked-grid, .rivalry-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      header { padding-top: 22px; }
+      .stats-grid, .picked-grid, .rivalry-grid { grid-template-columns: 1fr; }
+      .section, .bracket-wrapper { padding: 14px; border-radius: 20px; }
+      .team-row { grid-template-columns: 34px 1fr 82px; }
+      .team-icon { width: 34px; height: 34px; min-width: 34px; font-size: 21px; }
     }
   </style>
 </head>
-
 <body>
-
   <header>
-    <h1>Road to Final</h1>
-    <p>Joel vs Joshua FIFA Tournament</p>
-    <div class="trophy">🏆</div>
+    <div class="eyebrow">🎮 FIFA 25 Tournament Hub</div>
+    <h1>Joel vs Joshua</h1>
+    <p>Create separate tournament tabs, pick 8 teams, track owner picks, build the road to the final, and keep an auto-ranking top scorer table for each tournament.</p>
   </header>
 
-  <div class="tabs">
-    <button class="tab-button active" onclick="openTab('tournamentTab', this)">Tournament Bracket</button>
-    <button class="tab-button" onclick="openTab('scorerTab', this)">Top Scorers</button>
+  <div class="top-actions">
+    <button onclick="createTournament()">+ Create New Tournament</button>
+    <button class="ghost-button" onclick="generateDraw()">🎲 Draw Generator</button>
+    <button class="ghost-button" onclick="renameTournament()">Rename Current</button>
+    <button class="ghost-button" onclick="duplicateTournament()">Duplicate Current</button>
+    <button class="danger-button" onclick="deleteCurrentTournament()">Delete Current</button>
   </div>
 
-  <div id="tournamentTab" class="tab-content active">
+  <div class="tournament-tabs" id="tournamentTabs"></div>
 
-    <div class="bracket-wrapper">
+  <main class="page-shell">
+    <section class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Current Tournament</div><div class="stat-value" id="statTournament">-</div></div>
+      <div class="stat-card"><div class="stat-label">Teams Picked</div><div class="stat-value" id="statTeams">0 / 8</div></div>
+      <div class="stat-card"><div class="stat-label">Champion</div><div class="stat-value" id="statChampion">-</div></div>
+      <div class="stat-card"><div class="stat-label">Golden Boot</div><div class="stat-value" id="statGoldenBoot">-</div></div>
+    </section>
+
+    <section class="bracket-wrapper">
       <div class="bracket">
-
         <div class="round">
-          <h2>Quarter Finals</h2>
-
-          <div class="match">
-            <div class="team-row"><span class="team-icon" id="icon-team1"></span><select id="team1" onchange="updateIcon('team1')"></select></div>
-            <div class="team-row"><span class="team-icon" id="icon-team2"></span><select id="team2" onchange="updateIcon('team2')"></select></div>
-          </div>
-
-          <div class="match">
-            <div class="team-row"><span class="team-icon" id="icon-team3"></span><select id="team3" onchange="updateIcon('team3')"></select></div>
-            <div class="team-row"><span class="team-icon" id="icon-team4"></span><select id="team4" onchange="updateIcon('team4')"></select></div>
-          </div>
-
-          <div class="match">
-            <div class="team-row"><span class="team-icon" id="icon-team5"></span><select id="team5" onchange="updateIcon('team5')"></select></div>
-            <div class="team-row"><span class="team-icon" id="icon-team6"></span><select id="team6" onchange="updateIcon('team6')"></select></div>
-          </div>
-
-          <div class="match">
-            <div class="team-row"><span class="team-icon" id="icon-team7"></span><select id="team7" onchange="updateIcon('team7')"></select></div>
-            <div class="team-row"><span class="team-icon" id="icon-team8"></span><select id="team8" onchange="updateIcon('team8')"></select></div>
-          </div>
+          <h2 class="round-title">Quarter Finals - Pick 8 Teams</h2>
+          <div class="match"><div class="match-label"><span>QF 1</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team1"></span><select id="team1" onchange="updateTeamPick(1)"></select><select id="owner1" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team2"></span><select id="team2" onchange="updateTeamPick(2)"></select><select id="owner2" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
+          <div class="match"><div class="match-label"><span>QF 2</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team3"></span><select id="team3" onchange="updateTeamPick(3)"></select><select id="owner3" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team4"></span><select id="team4" onchange="updateTeamPick(4)"></select><select id="owner4" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
+          <div class="match"><div class="match-label"><span>QF 3</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team5"></span><select id="team5" onchange="updateTeamPick(5)"></select><select id="owner5" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team6"></span><select id="team6" onchange="updateTeamPick(6)"></select><select id="owner6" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
+          <div class="match"><div class="match-label"><span>QF 4</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team7"></span><select id="team7" onchange="updateTeamPick(7)"></select><select id="owner7" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team8"></span><select id="team8" onchange="updateTeamPick(8)"></select><select id="owner8" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
         </div>
 
         <div class="round">
-          <h2>Semi Finalists</h2>
-
-          <div class="match">
-            <div class="team-row"><span class="team-icon" id="icon-semi1"></span><select id="semi1" onchange="updateIcon('semi1')"></select></div>
-            <div class="team-row"><span class="team-icon" id="icon-semi2"></span><select id="semi2" onchange="updateIcon('semi2')"></select></div>
-          </div>
-
-          <div class="match">
-            <div class="team-row"><span class="team-icon" id="icon-semi3"></span><select id="semi3" onchange="updateIcon('semi3')"></select></div>
-            <div class="team-row"><span class="team-icon" id="icon-semi4"></span><select id="semi4" onchange="updateIcon('semi4')"></select></div>
-          </div>
-        </div>
-
-        <div class="center-area">
-          <div class="final-box">
-            <h2>Final</h2>
-            <div class="team-row"><span class="team-icon" id="icon-final1"></span><select id="final1" onchange="updateIcon('final1')"></select></div>
-            <div class="team-row"><span class="team-icon" id="icon-final2"></span><select id="final2" onchange="updateIcon('final2')"></select></div>
-          </div>
-
-          <div class="champion">
-            <h2>Champion</h2>
-            <div class="team-row"><span class="team-icon" id="icon-champion"></span><select id="champion" onchange="updateIcon('champion')"></select></div>
-          </div>
+          <h2 class="round-title">Semi Finals</h2>
+          <div class="match"><div class="match-label"><span>SF 1</span><span>From picked 8</span></div><div class="team-row simple"><span class="team-icon" id="icon-semi1"></span><select id="semi1" onchange="updateStagePick('semi1')"></select></div><div class="team-row simple"><span class="team-icon" id="icon-semi2"></span><select id="semi2" onchange="updateStagePick('semi2')"></select></div></div>
+          <div class="match"><div class="match-label"><span>SF 2</span><span>From picked 8</span></div><div class="team-row simple"><span class="team-icon" id="icon-semi3"></span><select id="semi3" onchange="updateStagePick('semi3')"></select></div><div class="team-row simple"><span class="team-icon" id="icon-semi4"></span><select id="semi4" onchange="updateStagePick('semi4')"></select></div></div>
         </div>
 
         <div class="round">
-          <h2>Finalists</h2>
-
-          <div class="match">
-            <div class="team-row"><span class="team-icon" id="icon-finalist1"></span><select id="finalist1" onchange="updateIcon('finalist1')"></select></div>
-          </div>
-
-          <div class="match">
-            <div class="team-row"><span class="team-icon" id="icon-finalist2"></span><select id="finalist2" onchange="updateIcon('finalist2')"></select></div>
-          </div>
+          <h2 class="round-title">Final</h2>
+          <div class="match"><div class="match-label"><span>Finalists</span><span>From semis</span></div><div class="team-row simple"><span class="team-icon" id="icon-final1"></span><select id="final1" onchange="updateStagePick('final1')"></select></div><div class="team-row simple"><span class="team-icon" id="icon-final2"></span><select id="final2" onchange="updateStagePick('final2')"></select></div></div>
+          <div class="champion-box"><h2 class="round-title">Champion</h2><div class="team-row simple"><span class="team-icon" id="icon-champion"></span><select id="champion" onchange="updateStagePick('champion')"></select></div></div>
         </div>
 
         <div class="round">
-          <h2>Scores</h2>
-          <div class="match"><input id="score1" placeholder="Quarter Final Scores" oninput="saveData()" /></div>
-          <div class="match"><input id="score2" placeholder="Semi Final Scores" oninput="saveData()" /></div>
-          <div class="match"><input id="score3" placeholder="Final Score" oninput="saveData()" /></div>
-        </div>
-
-      </div>
-    </div>
-
-    <section class="player-section">
-      <h2>Players and Teams</h2>
-
-      <div class="player-grid">
-        <div class="player-card">
-          <h3>Player 1</h3>
-          <label>Player Name</label>
-          <input id="player1Name" value="Joel" oninput="saveData()" />
-
-          <label>Team Picked</label>
-          <input id="player1Team" placeholder="Example: Argentina, Real Madrid..." oninput="saveData()" />
-        </div>
-
-        <div class="player-card">
-          <h3>Player 2</h3>
-          <label>Player Name</label>
-          <input id="player2Name" value="Joshua" oninput="saveData()" />
-
-          <label>Team Picked</label>
-          <input id="player2Team" placeholder="Example: France, Barcelona..." oninput="saveData()" />
+          <h2 class="round-title">Match Scores</h2>
+          <div class="score-card glass-card"><label>Semi Final 1</label><input id="scoreSemi1" placeholder="Example: France 2 - 1 Brazil" oninput="saveActiveTournament()"><label>Semi Final 2</label><input id="scoreSemi2" placeholder="Example: Spain 3 - 2 Portugal" oninput="saveActiveTournament()"><label>Final</label><input id="scoreFinal" placeholder="Example: Argentina 1 - 0 France" oninput="saveActiveTournament()"></div>
         </div>
       </div>
     </section>
 
-  </div>
+    <section class="section glass-card">
+      <div class="section-header"><h2>Picked Teams</h2><span class="muted-note">Quarter-final owner picks. Semi, final, and champion dropdowns are limited to the valid teams from the previous round.</span></div>
+      <div class="picked-grid" id="pickedTeamsGrid"></div>
+    </section>
 
-  <div id="scorerTab" class="tab-content">
-    <section class="scorer-section">
-      <h2>Top Scorer List</h2>
-
-      <div class="buttons" style="margin-bottom: 15px;">
-        <button onclick="addScorerRow()">Add Scorer</button>
+    <section class="section glass-card">
+      <div class="section-header">
+        <div><h2>Top Scorer List</h2><div class="muted-note">Team options come from the 8 picked teams. Player suggestions update based on team. Rankings auto-sort by goals.</div></div>
+        <button onclick="addScorerRow()">+ Add Scorer</button>
       </div>
-
       <div class="table-wrapper">
         <table>
           <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Scorer Name</th>
-              <th>Team</th>
-              <th>Goals</th>
-              <th>Owned By</th>
-              <th>Remove</th>
-            </tr>
+            <tr><th>Rank</th><th>Player</th><th>Team</th><th>Suggested / Custom Name</th><th>Goals</th><th>Owned By</th><th>Headshot URL</th><th></th></tr>
           </thead>
           <tbody id="scorerTableBody"></tbody>
         </table>
       </div>
     </section>
-  </div>
 
-  <div class="buttons">
-    <button onclick="saveData()">Save Tournament</button>
-    <button class="danger-button" onclick="resetTournament()">Reset</button>
-  </div>
+    <section class="section glass-card">
+      <div class="section-header">
+        <div>
+          <h2>Auto Match History + Penalty Tracker</h2>
+          <div class="muted-note">Use the bracket selections to auto-create match rows. Penalties can be tracked only for games that went to penalties.</div>
+        </div>
+        <div class="section-actions">
+          <button onclick="syncMatchHistoryFromBracket()">Auto Build From Bracket</button>
+          <button class="ghost-button" onclick="addManualMatch()">+ Add Manual Match</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Stage</th><th>Team A</th><th>Team B</th><th>Score</th><th>Winner</th><th>Owner Winner</th><th>Penalties</th><th></th></tr>
+          </thead>
+          <tbody id="matchHistoryBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section glass-card">
+      <div class="section-header">
+        <div><h2>Player Rivalry Stats</h2><div class="muted-note">Auto-calculated across every tournament tab you create.</div></div>
+      </div>
+      <div class="rivalry-grid" id="rivalryStatsGrid"></div>
+    </section>
+
+    <section class="section glass-card">
+      <div class="section-header">
+        <div><h2>Sharable Champion Card</h2><div class="muted-note">Creates a winner poster from the current tournament. You can download it as a PNG.</div></div>
+        <button onclick="downloadChampionCard()">Download Champion Card</button>
+      </div>
+      <div class="champion-card-wrap">
+        <canvas id="championCanvas" width="1080" height="1080"></canvas>
+      </div>
+    </section>
+
+    <div class="footer-actions">
+      <button onclick="saveActiveTournament()">Save Current Tournament</button>
+      <button class="ghost-button" onclick="exportData()">Export Backup</button>
+      <button class="danger-button" onclick="resetCurrentTournament()">Reset Current Tournament</button>
+    </div>
+  </main>
 
   <script>
+    const STORAGE_KEY = "fifa25TournamentHubData_v1";
+
     const teams = [
       { name: "Select Team", type: "none", icon: "⚽" },
-
-      // International teams
-      { name: "Argentina", type: "country", code: "AR" },
-      { name: "Australia", type: "country", code: "AU" },
-      { name: "Austria", type: "country", code: "AT" },
-      { name: "Belgium", type: "country", code: "BE" },
-      { name: "Brazil", type: "country", code: "BR" },
-      { name: "Canada", type: "country", code: "CA" },
-      { name: "Chile", type: "country", code: "CL" },
-      { name: "Colombia", type: "country", code: "CO" },
-      { name: "Croatia", type: "country", code: "HR" },
-      { name: "Czech Republic", type: "country", code: "CZ" },
-      { name: "Denmark", type: "country", code: "DK" },
-      { name: "Ecuador", type: "country", code: "EC" },
-      { name: "England", type: "country", icon: "🏴" },
-      { name: "France", type: "country", code: "FR" },
-      { name: "Germany", type: "country", code: "DE" },
-      { name: "Ghana", type: "country", code: "GH" },
-      { name: "Italy", type: "country", code: "IT" },
-      { name: "Japan", type: "country", code: "JP" },
-      { name: "Mexico", type: "country", code: "MX" },
-      { name: "Morocco", type: "country", code: "MA" },
-      { name: "Netherlands", type: "country", code: "NL" },
-      { name: "Norway", type: "country", code: "NO" },
-      { name: "Poland", type: "country", code: "PL" },
-      { name: "Portugal", type: "country", code: "PT" },
-      { name: "Scotland", type: "country", icon: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-      { name: "Senegal", type: "country", code: "SN" },
-      { name: "South Korea", type: "country", code: "KR" },
-      { name: "Spain", type: "country", code: "ES" },
-      { name: "Sweden", type: "country", code: "SE" },
-      { name: "Switzerland", type: "country", code: "CH" },
-      { name: "Turkey", type: "country", code: "TR" },
-      { name: "Uruguay", type: "country", code: "UY" },
-      { name: "USA", type: "country", code: "US" },
-      { name: "Wales", type: "country", icon: "🏴󠁧󠁢󠁷󠁬󠁳󠁿" },
-
-      // Top club teams
-      { name: "Real Madrid", type: "club", logo: "https://logo.clearbit.com/realmadrid.com" },
-      { name: "Barcelona", type: "club", logo: "https://logo.clearbit.com/fcbarcelona.com" },
-      { name: "Manchester City", type: "club", logo: "https://logo.clearbit.com/mancity.com" },
-      { name: "Liverpool", type: "club", logo: "https://logo.clearbit.com/liverpoolfc.com" },
-      { name: "Manchester United", type: "club", logo: "https://logo.clearbit.com/manutd.com" },
-      { name: "Chelsea", type: "club", logo: "https://logo.clearbit.com/chelseafc.com" },
-      { name: "Arsenal", type: "club", logo: "https://logo.clearbit.com/arsenal.com" },
-      { name: "Tottenham", type: "club", logo: "https://logo.clearbit.com/tottenhamhotspur.com" },
-      { name: "Bayern Munich", type: "club", logo: "https://logo.clearbit.com/fcbayern.com" },
-      { name: "Borussia Dortmund", type: "club", logo: "https://logo.clearbit.com/bvb.de" },
-      { name: "PSG", type: "club", logo: "https://logo.clearbit.com/psg.fr" },
-      { name: "Inter Milan", type: "club", logo: "https://logo.clearbit.com/inter.it" },
-      { name: "AC Milan", type: "club", logo: "https://logo.clearbit.com/acmilan.com" },
-      { name: "Juventus", type: "club", logo: "https://logo.clearbit.com/juventus.com" },
-      { name: "Napoli", type: "club", logo: "https://logo.clearbit.com/sscnapoli.it" },
-      { name: "Atletico Madrid", type: "club", logo: "https://logo.clearbit.com/atleticodemadrid.com" },
-      { name: "Bayer Leverkusen", type: "club", logo: "https://logo.clearbit.com/bayer04.de" },
-      { name: "RB Leipzig", type: "club", logo: "https://logo.clearbit.com/rbleipzig.com" },
-      { name: "Ajax", type: "club", logo: "https://logo.clearbit.com/ajax.nl" },
-      { name: "Benfica", type: "club", logo: "https://logo.clearbit.com/slbenfica.pt" },
-      { name: "Porto", type: "club", logo: "https://logo.clearbit.com/fcporto.pt" },
-      { name: "Sporting CP", type: "club", logo: "https://logo.clearbit.com/sporting.pt" },
-      { name: "Roma", type: "club", logo: "https://logo.clearbit.com/asroma.com" },
-      { name: "Lazio", type: "club", logo: "https://logo.clearbit.com/sslazio.it" },
-      { name: "Newcastle United", type: "club", logo: "https://logo.clearbit.com/newcastleunited.com" },
-      { name: "Aston Villa", type: "club", logo: "https://logo.clearbit.com/avfc.co.uk" },
-      { name: "West Ham", type: "club", logo: "https://logo.clearbit.com/whufc.com" },
-      { name: "Sevilla", type: "club", logo: "https://logo.clearbit.com/sevillafc.es" },
-      { name: "Villarreal", type: "club", logo: "https://logo.clearbit.com/villarrealcf.es" },
-      { name: "Al Nassr", type: "club", logo: "https://logo.clearbit.com/alnassr.sa" }
+      { name: "Argentina", type: "country", code: "AR" }, { name: "Australia", type: "country", code: "AU" }, { name: "Austria", type: "country", code: "AT" }, { name: "Belgium", type: "country", code: "BE" }, { name: "Brazil", type: "country", code: "BR" }, { name: "Canada", type: "country", code: "CA" }, { name: "Chile", type: "country", code: "CL" }, { name: "Colombia", type: "country", code: "CO" }, { name: "Croatia", type: "country", code: "HR" }, { name: "Denmark", type: "country", code: "DK" }, { name: "Ecuador", type: "country", code: "EC" }, { name: "England", type: "country", icon: "🏴" }, { name: "France", type: "country", code: "FR" }, { name: "Germany", type: "country", code: "DE" }, { name: "Ghana", type: "country", code: "GH" }, { name: "Italy", type: "country", code: "IT" }, { name: "Japan", type: "country", code: "JP" }, { name: "Mexico", type: "country", code: "MX" }, { name: "Morocco", type: "country", code: "MA" }, { name: "Netherlands", type: "country", code: "NL" }, { name: "Norway", type: "country", code: "NO" }, { name: "Poland", type: "country", code: "PL" }, { name: "Portugal", type: "country", code: "PT" }, { name: "Scotland", type: "country", icon: "🏴" }, { name: "Senegal", type: "country", code: "SN" }, { name: "South Korea", type: "country", code: "KR" }, { name: "Spain", type: "country", code: "ES" }, { name: "Sweden", type: "country", code: "SE" }, { name: "Switzerland", type: "country", code: "CH" }, { name: "Turkey", type: "country", code: "TR" }, { name: "Uruguay", type: "country", code: "UY" }, { name: "USA", type: "country", code: "US" }, { name: "Wales", type: "country", icon: "🏴" },
+      { name: "Real Madrid", type: "club", logo: "https://logo.clearbit.com/realmadrid.com" }, { name: "Barcelona", type: "club", logo: "https://logo.clearbit.com/fcbarcelona.com" }, { name: "Manchester City", type: "club", logo: "https://logo.clearbit.com/mancity.com" }, { name: "Liverpool", type: "club", logo: "https://logo.clearbit.com/liverpoolfc.com" }, { name: "Manchester United", type: "club", logo: "https://logo.clearbit.com/manutd.com" }, { name: "Chelsea", type: "club", logo: "https://logo.clearbit.com/chelseafc.com" }, { name: "Arsenal", type: "club", logo: "https://logo.clearbit.com/arsenal.com" }, { name: "Tottenham", type: "club", logo: "https://logo.clearbit.com/tottenhamhotspur.com" }, { name: "Bayern Munich", type: "club", logo: "https://logo.clearbit.com/fcbayern.com" }, { name: "Borussia Dortmund", type: "club", logo: "https://logo.clearbit.com/bvb.de" }, { name: "PSG", type: "club", logo: "https://logo.clearbit.com/psg.fr" }, { name: "Inter Milan", type: "club", logo: "https://logo.clearbit.com/inter.it" }, { name: "AC Milan", type: "club", logo: "https://logo.clearbit.com/acmilan.com" }, { name: "Juventus", type: "club", logo: "https://logo.clearbit.com/juventus.com" }, { name: "Napoli", type: "club", logo: "https://logo.clearbit.com/sscnapoli.it" }, { name: "Atletico Madrid", type: "club", logo: "https://logo.clearbit.com/atleticodemadrid.com" }, { name: "Bayer Leverkusen", type: "club", logo: "https://logo.clearbit.com/bayer04.de" }, { name: "RB Leipzig", type: "club", logo: "https://logo.clearbit.com/rbleipzig.com" }, { name: "Ajax", type: "club", logo: "https://logo.clearbit.com/ajax.nl" }, { name: "Benfica", type: "club", logo: "https://logo.clearbit.com/slbenfica.pt" }, { name: "Porto", type: "club", logo: "https://logo.clearbit.com/fcporto.pt" }, { name: "Sporting CP", type: "club", logo: "https://logo.clearbit.com/sporting.pt" }, { name: "Roma", type: "club", logo: "https://logo.clearbit.com/asroma.com" }, { name: "Lazio", type: "club", logo: "https://logo.clearbit.com/sslazio.it" }, { name: "Newcastle United", type: "club", logo: "https://logo.clearbit.com/newcastleunited.com" }, { name: "Aston Villa", type: "club", logo: "https://logo.clearbit.com/avfc.co.uk" }, { name: "West Ham", type: "club", logo: "https://logo.clearbit.com/whufc.com" }, { name: "Sevilla", type: "club", logo: "https://logo.clearbit.com/sevillafc.es" }, { name: "Villarreal", type: "club", logo: "https://logo.clearbit.com/villarrealcf.es" }, { name: "Al Nassr", type: "club", logo: "https://logo.clearbit.com/alnassr.sa" }
     ];
 
-    const bracketSelectIds = [
-      "team1", "team2", "team3", "team4", "team5", "team6", "team7", "team8",
-      "semi1", "semi2", "semi3", "semi4",
-      "final1", "final2",
-      "champion",
-      "finalist1", "finalist2"
-    ];
+    const playerSuggestions = {
+      "Argentina": ["Lionel Messi", "Lautaro Martinez", "Julian Alvarez", "Paulo Dybala", "Angel Di Maria"],
+      "Brazil": ["Vinicius Junior", "Rodrygo", "Neymar", "Raphinha", "Richarlison"],
+      "France": ["Kylian Mbappe", "Antoine Griezmann", "Ousmane Dembele", "Kingsley Coman", "Olivier Giroud"],
+      "Portugal": ["Cristiano Ronaldo", "Bruno Fernandes", "Rafael Leao", "Bernardo Silva", "Joao Felix"],
+      "England": ["Harry Kane", "Jude Bellingham", "Phil Foden", "Bukayo Saka", "Cole Palmer"],
+      "Spain": ["Alvaro Morata", "Lamine Yamal", "Nico Williams", "Dani Olmo", "Ferran Torres"],
+      "Germany": ["Kai Havertz", "Jamal Musiala", "Florian Wirtz", "Leroy Sane", "Serge Gnabry"],
+      "Netherlands": ["Cody Gakpo", "Memphis Depay", "Xavi Simons", "Donyell Malen", "Wout Weghorst"],
+      "Belgium": ["Romelu Lukaku", "Kevin De Bruyne", "Jeremy Doku", "Leandro Trossard", "Lois Openda"],
+      "Italy": ["Federico Chiesa", "Domenico Berardi", "Ciro Immobile", "Giacomo Raspadori", "Nicolo Barella"],
+      "Real Madrid": ["Kylian Mbappe", "Vinicius Junior", "Jude Bellingham", "Rodrygo", "Endrick"],
+      "Barcelona": ["Robert Lewandowski", "Lamine Yamal", "Raphinha", "Ferran Torres", "Pedri"],
+      "Manchester City": ["Erling Haaland", "Phil Foden", "Kevin De Bruyne", "Julian Alvarez", "Bernardo Silva"],
+      "Liverpool": ["Mohamed Salah", "Darwin Nunez", "Luis Diaz", "Diogo Jota", "Cody Gakpo"],
+      "Manchester United": ["Bruno Fernandes", "Marcus Rashford", "Rasmus Hojlund", "Alejandro Garnacho", "Antony"],
+      "Chelsea": ["Cole Palmer", "Christopher Nkunku", "Nicolas Jackson", "Raheem Sterling", "Mykhailo Mudryk"],
+      "Arsenal": ["Bukayo Saka", "Gabriel Martinelli", "Kai Havertz", "Martin Odegaard", "Gabriel Jesus"],
+      "Bayern Munich": ["Harry Kane", "Jamal Musiala", "Leroy Sane", "Kingsley Coman", "Thomas Muller"],
+      "PSG": ["Ousmane Dembele", "Goncalo Ramos", "Bradley Barcola", "Marco Asensio", "Randal Kolo Muani"],
+      "Al Nassr": ["Cristiano Ronaldo", "Sadio Mane", "Anderson Talisca", "Otavio", "Marcelo Brozovic"]
+    };
 
-    const inputIds = [
-      "score1", "score2", "score3",
-      "player1Name", "player1Team",
-      "player2Name", "player2Team"
-    ];
+    const knownHeadshots = {
+      "Lionel Messi": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Lionel_Messi_20180626.jpg/220px-Lionel_Messi_20180626.jpg",
+      "Cristiano Ronaldo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cristiano_Ronaldo_2018.jpg/220px-Cristiano_Ronaldo_2018.jpg",
+      "Kylian Mbappe": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Kylian_Mbapp%C3%A9_2019.jpg/220px-Kylian_Mbapp%C3%A9_2019.jpg",
+      "Erling Haaland": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Erling_Haaland_2023.jpg/220px-Erling_Haaland_2023.jpg",
+      "Neymar": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Bra-Cos_%281%29_%28cropped%29.jpg/220px-Bra-Cos_%281%29_%28cropped%29.jpg",
+      "Mohamed Salah": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Mohamed_Salah_2018.jpg/220px-Mohamed_Salah_2018.jpg",
+      "Kevin De Bruyne": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Kevin_De_Bruyne_201807091.jpg/220px-Kevin_De_Bruyne_201807091.jpg",
+      "Harry Kane": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Harry_Kane_in_Russia_2.jpg/220px-Harry_Kane_in_Russia_2.jpg",
+      "Jude Bellingham": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Jude_Bellingham_2020.jpg/220px-Jude_Bellingham_2020.jpg",
+      "Vinicius Junior": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Vinicius_Junior_2021.jpg/220px-Vinicius_Junior_2021.jpg"
+    };
 
-    let scorers = [];
+    const qfTeamIds = ["team1","team2","team3","team4","team5","team6","team7","team8"];
+    const ownerIds = ["owner1","owner2","owner3","owner4","owner5","owner6","owner7","owner8"];
+    const semiIds = ["semi1","semi2","semi3","semi4"];
+    const finalIds = ["final1","final2"];
+    const scoreIds = ["scoreSemi1","scoreSemi2","scoreFinal"];
 
-    function openTab(tabId, button) {
-      document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
-      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
-      document.getElementById(tabId).classList.add("active");
-      button.classList.add("active");
-    }
+    let appState = { activeId: null, tournaments: [] };
+
+    function uid() { return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+    function escapeAttr(value) { return String(value || "").replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;"); }
 
     function countryCodeToFlag(code) {
-      return code
-        .toUpperCase()
-        .replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt()));
+      return code.toUpperCase().replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt()));
     }
 
     function getTeamIcon(teamName) {
       const team = teams.find(t => t.name === teamName);
-
       if (!team) return "⚽";
-
-      if (team.logo) {
-        return `<img src="${team.logo}" onerror="this.outerHTML='⚽'" alt="${team.name} logo">`;
-      }
-
-      if (team.code) {
-        return countryCodeToFlag(team.code);
-      }
-
+      if (team.logo) return `<img src="${team.logo}" onerror="this.outerHTML='⚽'" alt="${team.name}">`;
+      if (team.code) return countryCodeToFlag(team.code);
       return team.icon || "⚽";
     }
 
-    function fillSelect(select) {
+    function fillTeamSelect(select, allowedNames = null, includePlaceholder = true) {
+      const current = select.value;
       select.innerHTML = "";
-
-      const internationalGroup = document.createElement("optgroup");
-      internationalGroup.label = "International Teams";
-
-      const clubGroup = document.createElement("optgroup");
-      clubGroup.label = "Club Teams";
-
-      teams.forEach(team => {
+      const names = allowedNames || teams.map(t => t.name);
+      const addOption = (name, labelPrefix = "") => {
+        const team = teams.find(t => t.name === name) || { name, icon: "⚽" };
         const option = document.createElement("option");
         option.value = team.name;
-
-        if (team.logo) {
-          option.textContent = `⚽ ${team.name}`;
-        } else if (team.code) {
-          option.textContent = `${countryCodeToFlag(team.code)} ${team.name}`;
-        } else {
-          option.textContent = `${team.icon || "⚽"} ${team.name}`;
-        }
-
-        if (team.type === "club") {
-          clubGroup.appendChild(option);
-        } else {
-          internationalGroup.appendChild(option);
-        }
-      });
-
-      select.appendChild(internationalGroup);
-      select.appendChild(clubGroup);
+        if (team.logo) option.textContent = `⚽ ${team.name}`;
+        else if (team.code) option.textContent = `${countryCodeToFlag(team.code)} ${team.name}`;
+        else option.textContent = `${labelPrefix}${team.icon || "⚽"} ${team.name}`;
+        select.appendChild(option);
+      };
+      if (includePlaceholder && !names.includes("Select Team")) addOption("Select Team");
+      names.forEach(name => addOption(name));
+      if ([...select.options].some(o => o.value === current)) select.value = current;
     }
 
-    function fillDropdowns() {
-      bracketSelectIds.forEach(id => {
-        const select = document.getElementById(id);
-        fillSelect(select);
+    function newTournament(name) {
+      return {
+        id: uid(),
+        name: name || "Tournament 1",
+        createdAt: new Date().toISOString(),
+        data: {
+          team1: "Argentina", team2: "Brazil", team3: "France", team4: "Portugal",
+          team5: "England", team6: "Spain", team7: "Real Madrid", team8: "Barcelona",
+          owner1: "Joel", owner2: "Joshua", owner3: "Joel", owner4: "Joshua",
+          owner5: "Joel", owner6: "Joshua", owner7: "Joel", owner8: "Joshua",
+          semi1: "Select Team", semi2: "Select Team", semi3: "Select Team", semi4: "Select Team",
+          final1: "Select Team", final2: "Select Team", champion: "Select Team",
+          scoreSemi1: "", scoreSemi2: "", scoreFinal: "",
+          matchHistory: [],
+          scorers: [
+            { player: "", team: "Select Team", goals: 0, owner: "Joel", photo: "" },
+            { player: "", team: "Select Team", goals: 0, owner: "Joshua", photo: "" }
+          ]
+        }
+      };
+    }
+
+    function loadAppState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try { appState = JSON.parse(saved); } catch(e) { appState = { activeId: null, tournaments: [] }; }
+      }
+      if (!appState.tournaments || appState.tournaments.length === 0) {
+        const first = newTournament("Opening Cup");
+        appState = { activeId: first.id, tournaments: [first] };
+      }
+      if (!appState.activeId || !appState.tournaments.some(t => t.id === appState.activeId)) appState.activeId = appState.tournaments[0].id;
+    }
+
+    function saveAppState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
+    function activeTournament() { return appState.tournaments.find(t => t.id === appState.activeId); }
+
+    function createTournament() {
+      const name = prompt("Tournament name? Example: Christmas Cup, Summer League, Round 3");
+      if (!name || !name.trim()) return;
+      const t = newTournament(name.trim());
+      appState.tournaments.push(t);
+      appState.activeId = t.id;
+      saveAppState();
+      renderAll();
+    }
+
+    function renameTournament() {
+      const t = activeTournament();
+      const name = prompt("New tournament name:", t.name);
+      if (!name || !name.trim()) return;
+      t.name = name.trim();
+      saveAppState();
+      renderAll();
+    }
+
+    function duplicateTournament() {
+      const t = activeTournament();
+      const copy = JSON.parse(JSON.stringify(t));
+      copy.id = uid();
+      copy.name = t.name + " Copy";
+      copy.createdAt = new Date().toISOString();
+      appState.tournaments.push(copy);
+      appState.activeId = copy.id;
+      saveAppState();
+      renderAll();
+    }
+
+    function deleteCurrentTournament() {
+      if (appState.tournaments.length === 1) { alert("Keep at least one tournament."); return; }
+      const t = activeTournament();
+      if (!confirm(`Delete ${t.name}?`)) return;
+      appState.tournaments = appState.tournaments.filter(x => x.id !== t.id);
+      appState.activeId = appState.tournaments[0].id;
+      saveAppState();
+      renderAll();
+    }
+
+    function renderTournamentTabs() {
+      const wrap = document.getElementById("tournamentTabs");
+      wrap.innerHTML = "";
+      appState.tournaments.forEach(t => {
+        const btn = document.createElement("button");
+        btn.className = "tab-button" + (t.id === appState.activeId ? " active" : "");
+        btn.textContent = t.name;
+        btn.onclick = () => { saveActiveTournament(); appState.activeId = t.id; saveAppState(); renderAll(); };
+        wrap.appendChild(btn);
       });
+    }
+
+    function renderFormFromData() {
+      const t = activeTournament();
+      const d = t.data;
+      qfTeamIds.forEach(id => { fillTeamSelect(document.getElementById(id), null, true); document.getElementById(id).value = d[id] || "Select Team"; updateIcon(id); });
+      ownerIds.forEach(id => { document.getElementById(id).value = d[id] || "Joel"; });
+      refreshProgressionDropdowns(false);
+      semiIds.concat(finalIds, ["champion"]).forEach(id => { if (d[id]) document.getElementById(id).value = d[id]; updateIcon(id); });
+      scoreIds.forEach(id => { document.getElementById(id).value = d[id] || ""; });
+      renderPickedTeams();
+      renderScorers();
+      renderMatchHistory();
+      renderRivalryStats();
+      drawChampionCard();
+      updateStats();
+    }
+
+    function saveActiveTournament() {
+      const t = activeTournament();
+      const d = t.data;
+      qfTeamIds.concat(ownerIds, semiIds, finalIds, ["champion"], scoreIds).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) d[id] = el.value;
+      });
+      saveAppState();
+      renderPickedTeams();
+      renderRivalryStats();
+      drawChampionCard();
+      updateStats();
     }
 
     function updateIcon(id) {
-      const selectedTeam = document.getElementById(id).value;
-      const icon = document.getElementById(`icon-${id}`);
-
-      if (icon) {
-        icon.innerHTML = getTeamIcon(selectedTeam);
-      }
-
-      saveData();
+      const el = document.getElementById(id);
+      const icon = document.getElementById("icon-" + id);
+      if (el && icon) icon.innerHTML = getTeamIcon(el.value);
     }
 
-    function addScorerRow(savedScorer = null) {
-      scorers.push(savedScorer || {
-        name: "",
-        team: "Select Team",
-        goals: "",
-        owner: ""
+    function updateTeamPick(num) {
+      updateIcon("team" + num);
+      refreshProgressionDropdowns(true);
+      refreshScorerTeamChoices();
+      saveActiveTournament();
+    }
+
+    function updateStagePick(id) {
+      updateIcon(id);
+      refreshProgressionDropdowns(true);
+      saveActiveTournament();
+    }
+
+    function getPickedTeams() {
+      return qfTeamIds.map((id, i) => ({ team: document.getElementById(id).value, owner: document.getElementById("owner" + (i+1)).value })).filter(x => x.team && x.team !== "Select Team");
+    }
+
+    function refreshProgressionDropdowns(resetInvalid) {
+      const picked = getPickedTeams().map(x => x.team);
+      semiIds.forEach(id => {
+        const select = document.getElementById(id);
+        const old = select.value;
+        fillTeamSelect(select, picked, true);
+        select.value = picked.includes(old) ? old : "Select Team";
+        if (!resetInvalid && old) select.value = picked.includes(old) || old === "Select Team" ? old : "Select Team";
+        updateIcon(id);
       });
 
-      renderScorers();
-      saveData();
+      const semiPicked = semiIds.map(id => document.getElementById(id).value).filter(v => v && v !== "Select Team");
+      finalIds.forEach(id => {
+        const select = document.getElementById(id);
+        const old = select.value;
+        fillTeamSelect(select, semiPicked, true);
+        select.value = semiPicked.includes(old) ? old : "Select Team";
+        updateIcon(id);
+      });
+
+      const finalPicked = finalIds.map(id => document.getElementById(id).value).filter(v => v && v !== "Select Team");
+      const champ = document.getElementById("champion");
+      const oldChampion = champ.value;
+      fillTeamSelect(champ, finalPicked, true);
+      champ.value = finalPicked.includes(oldChampion) ? oldChampion : "Select Team";
+      updateIcon("champion");
     }
 
-    function deleteScorerRow(index) {
-      scorers.splice(index, 1);
-      renderScorers();
-      saveData();
-    }
-
-    function updateScorer(index, field, value) {
-      scorers[index][field] = value;
-      saveData();
-
-      if (field === "team") {
-        const icon = document.getElementById(`icon-scorer-${index}`);
-        if (icon) {
-          icon.innerHTML = getTeamIcon(value);
-        }
+    function renderPickedTeams() {
+      const grid = document.getElementById("pickedTeamsGrid");
+      const picked = getPickedTeams();
+      grid.innerHTML = "";
+      if (picked.length === 0) {
+        grid.innerHTML = `<div class="muted-note">No teams picked yet.</div>`;
+        return;
       }
+      picked.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "team-chip";
+        div.innerHTML = `<span class="team-icon">${getTeamIcon(item.team)}</span><div class="chip-text"><strong>${index + 1}. ${item.team}</strong><span>Owned by ${item.owner}</span></div>`;
+        grid.appendChild(div);
+      });
+    }
+
+    function getOwnerForTeam(team) {
+      const picked = getPickedTeams();
+      const found = picked.find(x => x.team === team);
+      return found ? found.owner : "Joel";
+    }
+
+    function getPlayerOptions(team) {
+      return playerSuggestions[team] || ["Add Custom Player"];
+    }
+
+    function playerInitials(name) {
+      if (!name) return "?";
+      return name.split(" ").filter(Boolean).slice(0,2).map(x => x[0]).join("").toUpperCase();
+    }
+
+    function headshotHtml(scorer) {
+      const url = scorer.photo || knownHeadshots[scorer.player] || "";
+      if (url) return `<img src="${escapeAttr(url)}" onerror="this.outerHTML='${playerInitials(scorer.player)}'" alt="${escapeAttr(scorer.player)}">`;
+      return playerInitials(scorer.player);
+    }
+
+    function addScorerRow() {
+      const t = activeTournament();
+      const firstTeam = getPickedTeams()[0]?.team || "Select Team";
+      t.data.scorers.push({ player: "", team: firstTeam, goals: 0, owner: getOwnerForTeam(firstTeam), photo: "" });
+      saveAppState();
+      renderScorers();
+      renderRivalryStats();
+      drawChampionCard();
+      updateStats();
+    }
+
+    function deleteScorerRow(originalIndex) {
+      const t = activeTournament();
+      t.data.scorers.splice(originalIndex, 1);
+      saveAppState();
+      renderScorers();
+      updateStats();
+    }
+
+    function updateScorer(originalIndex, field, value) {
+      const scorer = activeTournament().data.scorers[originalIndex];
+      scorer[field] = field === "goals" ? Number(value || 0) : value;
+      if (field === "team") {
+        scorer.owner = getOwnerForTeam(value);
+        const suggested = getPlayerOptions(value);
+        if (!suggested.includes(scorer.player)) scorer.player = "";
+      }
+      if (field === "player" && knownHeadshots[value] && !scorer.photo) scorer.photo = knownHeadshots[value];
+      saveAppState();
+      renderScorers();
+      updateStats();
+    }
+
+    function refreshScorerTeamChoices() {
+      const validTeams = getPickedTeams().map(x => x.team);
+      const t = activeTournament();
+      t.data.scorers.forEach(s => { if (!validTeams.includes(s.team)) s.team = validTeams[0] || "Select Team"; });
+      renderScorers();
     }
 
     function renderScorers() {
       const tbody = document.getElementById("scorerTableBody");
+      const t = activeTournament();
+      const validTeams = getPickedTeams().map(x => x.team);
+      const sorted = t.data.scorers.map((s, originalIndex) => ({...s, originalIndex})).sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0));
       tbody.innerHTML = "";
-
-      scorers.forEach((scorer, index) => {
+      sorted.forEach((scorer, rankIndex) => {
+        const teamOptions = ["Select Team"].concat(validTeams).map(team => `<option value="${escapeAttr(team)}" ${team === scorer.team ? "selected" : ""}>${team === "Select Team" ? "⚽" : ""} ${escapeAttr(team)}</option>`).join("");
+        const suggestions = getPlayerOptions(scorer.team);
+        const suggestionOptions = [`<option value="">Choose / type player</option>`].concat(suggestions.map(name => `<option value="${escapeAttr(name)}" ${name === scorer.player ? "selected" : ""}>${escapeAttr(name)}</option>`)).join("");
         const tr = document.createElement("tr");
-
         tr.innerHTML = `
-          <td>${index + 1}</td>
-
-          <td>
-            <input
-              value="${scorer.name || ""}"
-              placeholder="Example: Mbappe"
-              oninput="updateScorer(${index}, 'name', this.value)"
-            />
-          </td>
-
-          <td>
-            <div class="team-row">
-              <span class="team-icon" id="icon-scorer-${index}">${getTeamIcon(scorer.team)}</span>
-              <select onchange="updateScorer(${index}, 'team', this.value)"></select>
-            </div>
-          </td>
-
-          <td>
-            <input
-              type="number"
-              min="0"
-              value="${scorer.goals || ""}"
-              placeholder="0"
-              oninput="updateScorer(${index}, 'goals', this.value)"
-            />
-          </td>
-
-          <td>
-            <input
-              value="${scorer.owner || ""}"
-              placeholder="Joel or Joshua"
-              oninput="updateScorer(${index}, 'owner', this.value)"
-            />
-          </td>
-
-          <td>
-            <button class="small-danger" onclick="deleteScorerRow(${index})">Delete</button>
-          </td>
+          <td><span class="rank-badge">${rankIndex + 1}</span></td>
+          <td><div class="player-cell"><span class="headshot">${headshotHtml(scorer)}</span><strong>${escapeAttr(scorer.player || "New Scorer")}</strong></div></td>
+          <td><select onchange="updateScorer(${scorer.originalIndex}, 'team', this.value)">${teamOptions}</select></td>
+          <td><select onchange="updateScorer(${scorer.originalIndex}, 'player', this.value)">${suggestionOptions}</select><input style="margin-top:8px" value="${escapeAttr(scorer.player)}" placeholder="Or type custom player" oninput="updateScorer(${scorer.originalIndex}, 'player', this.value)"></td>
+          <td><input type="number" min="0" value="${Number(scorer.goals || 0)}" oninput="updateScorer(${scorer.originalIndex}, 'goals', this.value)"></td>
+          <td><select onchange="updateScorer(${scorer.originalIndex}, 'owner', this.value)"><option ${scorer.owner === "Joel" ? "selected" : ""}>Joel</option><option ${scorer.owner === "Joshua" ? "selected" : ""}>Joshua</option></select></td>
+          <td><input value="${escapeAttr(scorer.photo || "")}" placeholder="Optional image URL" oninput="updateScorer(${scorer.originalIndex}, 'photo', this.value)"></td>
+          <td><button class="small-danger" onclick="deleteScorerRow(${scorer.originalIndex})">Delete</button></td>
         `;
-
-        const select = tr.querySelector("select");
-        fillSelect(select);
-        select.value = scorer.team || "Select Team";
-
         tbody.appendChild(tr);
       });
     }
 
-    function saveData() {
-      const data = {
-        scorers: scorers
-      };
-
-      bracketSelectIds.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) data[id] = element.value;
-      });
-
-      inputIds.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) data[id] = element.value;
-      });
-
-      localStorage.setItem("fifaTournamentData", JSON.stringify(data));
+    function updateStats() {
+      const t = activeTournament();
+      const picked = getPickedTeams();
+      const scorers = (t.data.scorers || []).slice().sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0));
+      document.getElementById("statTournament").textContent = t.name;
+      document.getElementById("statTeams").textContent = `${picked.length} / 8`;
+      document.getElementById("statChampion").textContent = document.getElementById("champion").value === "Select Team" ? "-" : document.getElementById("champion").value;
+      document.getElementById("statGoldenBoot").textContent = scorers[0] && scorers[0].player ? `${scorers[0].player} (${scorers[0].goals || 0})` : "-";
     }
 
-    function loadData() {
-      const saved = localStorage.getItem("fifaTournamentData");
 
-      if (!saved) {
-        setDefaultTeams();
-        scorers = [
-          { name: "", team: "Select Team", goals: "", owner: "" },
-          { name: "", team: "Select Team", goals: "", owner: "" },
-          { name: "", team: "Select Team", goals: "", owner: "" },
-          { name: "", team: "Select Team", goals: "", owner: "" },
-          { name: "", team: "Select Team", goals: "", owner: "" }
-        ];
-        renderScorers();
-        saveData();
+    function ownerOptionsHtml(value) {
+      return `<option ${value === "Joel" ? "selected" : ""}>Joel</option><option ${value === "Joshua" ? "selected" : ""}>Joshua</option>`;
+    }
+
+    function allActiveTeamNames() {
+      return getPickedTeams().map(x => x.team);
+    }
+
+    function getStageTeams(stage) {
+      if (stage === "Semi Final 1") return [document.getElementById("semi1").value, document.getElementById("semi2").value];
+      if (stage === "Semi Final 2") return [document.getElementById("semi3").value, document.getElementById("semi4").value];
+      if (stage === "Final") return [document.getElementById("final1").value, document.getElementById("final2").value];
+      return ["Select Team", "Select Team"];
+    }
+
+    function teamOptionsHtml(selected, teamsList = allActiveTeamNames()) {
+      return ["Select Team"].concat(teamsList).map(team => `<option value="${escapeAttr(team)}" ${team === selected ? "selected" : ""}>${escapeAttr(team)}</option>`).join("");
+    }
+
+    function todayShort() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function syncMatchHistoryFromBracket() {
+      saveActiveTournament();
+      const t = activeTournament();
+      if (!t.data.matchHistory) t.data.matchHistory = [];
+      const templates = [
+        { key: "sf1", stage: "Semi Final 1", teams: getStageTeams("Semi Final 1"), score: document.getElementById("scoreSemi1").value },
+        { key: "sf2", stage: "Semi Final 2", teams: getStageTeams("Semi Final 2"), score: document.getElementById("scoreSemi2").value },
+        { key: "final", stage: "Final", teams: getStageTeams("Final"), score: document.getElementById("scoreFinal").value }
+      ];
+      templates.forEach(item => {
+        if (item.teams.some(team => !team || team === "Select Team")) return;
+        let match = t.data.matchHistory.find(m => m.key === item.key);
+        if (!match) {
+          match = { key: item.key, date: todayShort(), stage: item.stage, teamA: item.teams[0], teamB: item.teams[1], score: item.score || "", winner: "Select Team", penalties: false, penA: "", penB: "" };
+          t.data.matchHistory.push(match);
+        } else {
+          match.stage = item.stage;
+          match.teamA = item.teams[0];
+          match.teamB = item.teams[1];
+          match.score = item.score || match.score || "";
+        }
+      });
+      saveAppState();
+      renderMatchHistory();
+      renderRivalryStats();
+      drawChampionCard();
+    }
+
+    function addManualMatch() {
+      const t = activeTournament();
+      if (!t.data.matchHistory) t.data.matchHistory = [];
+      const teamsList = allActiveTeamNames();
+      t.data.matchHistory.push({ key: uid(), date: todayShort(), stage: "Friendly", teamA: teamsList[0] || "Select Team", teamB: teamsList[1] || "Select Team", score: "", winner: "Select Team", penalties: false, penA: "", penB: "" });
+      saveAppState();
+      renderMatchHistory();
+      renderRivalryStats();
+    }
+
+    function updateMatch(index, field, value) {
+      const t = activeTournament();
+      if (!t.data.matchHistory) t.data.matchHistory = [];
+      const match = t.data.matchHistory[index];
+      if (!match) return;
+      if (field === "penalties") match[field] = Boolean(value);
+      else match[field] = value;
+      saveAppState();
+      renderMatchHistory();
+      renderRivalryStats();
+      drawChampionCard();
+    }
+
+    function deleteMatch(index) {
+      const t = activeTournament();
+      t.data.matchHistory.splice(index, 1);
+      saveAppState();
+      renderMatchHistory();
+      renderRivalryStats();
+      drawChampionCard();
+    }
+
+    function renderMatchHistory() {
+      const tbody = document.getElementById("matchHistoryBody");
+      if (!tbody) return;
+      const t = activeTournament();
+      if (!t.data.matchHistory) t.data.matchHistory = [];
+      tbody.innerHTML = "";
+      if (t.data.matchHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="muted-note">No matches yet. Click Auto Build From Bracket after choosing semi-finalists/finalists.</td></tr>`;
         return;
       }
-
-      const data = JSON.parse(saved);
-
-      bracketSelectIds.forEach(id => {
-        const element = document.getElementById(id);
-
-        if (element && data[id]) {
-          element.value = data[id];
-        }
-
-        if (element) {
-          updateIcon(id);
-        }
+      t.data.matchHistory.forEach((match, index) => {
+        const teamsForWinner = ["Select Team", match.teamA, match.teamB].filter((v, i, arr) => v && arr.indexOf(v) === i);
+        const penaltyCells = match.penalties
+          ? `<input type="number" min="0" value="${escapeAttr(match.penA || "")}" placeholder="${escapeAttr(match.teamA || "A")}" oninput="updateMatch(${index}, 'penA', this.value)"><input style="margin-top:6px" type="number" min="0" value="${escapeAttr(match.penB || "")}" placeholder="${escapeAttr(match.teamB || "B")}" oninput="updateMatch(${index}, 'penB', this.value)">`
+          : `<span class="muted-note">Off</span>`;
+        const winnerOwner = match.winner && match.winner !== "Select Team" ? getOwnerForTeam(match.winner) : "-";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input type="date" value="${escapeAttr(match.date || todayShort())}" oninput="updateMatch(${index}, 'date', this.value)"></td>
+          <td><input value="${escapeAttr(match.stage || "")}" oninput="updateMatch(${index}, 'stage', this.value)"></td>
+          <td><select onchange="updateMatch(${index}, 'teamA', this.value)">${teamOptionsHtml(match.teamA)}</select></td>
+          <td><select onchange="updateMatch(${index}, 'teamB', this.value)">${teamOptionsHtml(match.teamB)}</select></td>
+          <td><input value="${escapeAttr(match.score || "")}" placeholder="2 - 1" oninput="updateMatch(${index}, 'score', this.value)"></td>
+          <td><select onchange="updateMatch(${index}, 'winner', this.value)">${teamOptionsHtml(match.winner, teamsForWinner)}</select></td>
+          <td>${escapeAttr(winnerOwner)}</td>
+          <td><label class="mini-check"><input type="checkbox" ${match.penalties ? "checked" : ""} onchange="updateMatch(${index}, 'penalties', this.checked)"> Went to pens</label>${penaltyCells}</td>
+          <td><button class="small-danger" onclick="deleteMatch(${index})">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
       });
-
-      inputIds.forEach(id => {
-        const element = document.getElementById(id);
-
-        if (element && data[id] !== undefined) {
-          element.value = data[id];
-        }
-      });
-
-      scorers = data.scorers || [];
-      if (scorers.length === 0) {
-        scorers = [
-          { name: "", team: "Select Team", goals: "", owner: "" },
-          { name: "", team: "Select Team", goals: "", owner: "" },
-          { name: "", team: "Select Team", goals: "", owner: "" }
-        ];
-      }
-
-      renderScorers();
     }
 
-    function setDefaultTeams() {
-      const defaults = {
-        team1: "Argentina",
-        team2: "Brazil",
-        team3: "France",
-        team4: "Portugal",
-        team5: "England",
-        team6: "Spain",
-        team7: "Real Madrid",
-        team8: "Barcelona",
-        player1Name: "Joel",
-        player2Name: "Joshua"
+    function generateDraw() {
+      const picked = getPickedTeams();
+      if (picked.length !== 8) {
+        alert("Pick all 8 teams first, then use the draw generator.");
+        return;
+      }
+      const shuffled = picked.slice().sort(() => Math.random() - 0.5);
+      shuffled.forEach((item, index) => {
+        document.getElementById("team" + (index + 1)).value = item.team;
+        document.getElementById("owner" + (index + 1)).value = item.owner;
+        updateIcon("team" + (index + 1));
+      });
+      refreshProgressionDropdowns(true);
+      refreshScorerTeamChoices();
+      saveActiveTournament();
+    }
+
+    function ownerOfTeamFromTournament(data, team) {
+      for (let i = 1; i <= 8; i++) if (data["team" + i] === team) return data["owner" + i] || "Joel";
+      return "-";
+    }
+
+    function renderRivalryStats() {
+      const grid = document.getElementById("rivalryStatsGrid");
+      if (!grid) return;
+      const stats = {
+        Joel: { wins: 0, goals: 0, trophies: 0, finals: 0, pens: 0 },
+        Joshua: { wins: 0, goals: 0, trophies: 0, finals: 0, pens: 0 }
       };
-
-      Object.keys(defaults).forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.value = defaults[id];
+      appState.tournaments.forEach(t => {
+        const d = t.data || {};
+        const champOwner = d.champion && d.champion !== "Select Team" ? ownerOfTeamFromTournament(d, d.champion) : null;
+        if (champOwner && stats[champOwner]) stats[champOwner].trophies++;
+        [d.final1, d.final2].forEach(team => {
+          const owner = team && team !== "Select Team" ? ownerOfTeamFromTournament(d, team) : null;
+          if (owner && stats[owner]) stats[owner].finals++;
+        });
+        (d.matchHistory || []).forEach(match => {
+          const owner = match.winner && match.winner !== "Select Team" ? ownerOfTeamFromTournament(d, match.winner) : null;
+          if (owner && stats[owner]) stats[owner].wins++;
+          if (match.penalties && owner && stats[owner]) stats[owner].pens++;
+        });
+        (d.scorers || []).forEach(scorer => {
+          const owner = scorer.owner || ownerOfTeamFromTournament(d, scorer.team);
+          if (stats[owner]) stats[owner].goals += Number(scorer.goals || 0);
+        });
       });
-
-      bracketSelectIds.forEach(id => updateIcon(id));
+      grid.innerHTML = `
+        <div class="rivalry-card"><span class="muted-note">Joel Match Wins</span><strong>${stats.Joel.wins}</strong></div>
+        <div class="rivalry-card"><span class="muted-note">Joshua Match Wins</span><strong>${stats.Joshua.wins}</strong></div>
+        <div class="rivalry-card"><span class="muted-note">Joel Trophies</span><strong>${stats.Joel.trophies}</strong></div>
+        <div class="rivalry-card"><span class="muted-note">Joshua Trophies</span><strong>${stats.Joshua.trophies}</strong></div>
+        <div class="rivalry-card"><span class="muted-note">Joel Total Goals</span><strong>${stats.Joel.goals}</strong></div>
+        <div class="rivalry-card"><span class="muted-note">Joshua Total Goals</span><strong>${stats.Joshua.goals}</strong></div>
+        <div class="rivalry-card"><span class="muted-note">Joel Finals Reached</span><strong>${stats.Joel.finals}</strong></div>
+        <div class="rivalry-card"><span class="muted-note">Joshua Finals Reached</span><strong>${stats.Joshua.finals}</strong></div>
+      `;
     }
 
-    function resetTournament() {
-      if (confirm("Reset the whole tournament and top scorer list?")) {
-        localStorage.removeItem("fifaTournamentData");
+    function drawChampionCard() {
+      const canvas = document.getElementById("championCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const t = activeTournament();
+      const d = t.data;
+      const champion = d.champion && d.champion !== "Select Team" ? d.champion : "Champion Pending";
+      const owner = champion !== "Champion Pending" ? ownerOfTeamFromTournament(d, champion) : "Joel vs Joshua";
+      const golden = (d.scorers || []).slice().sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0))[0];
+      const finalScore = d.scoreFinal || "Final score pending";
 
-        bracketSelectIds.forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.value = "Select Team";
-            updateIcon(id);
-          }
-        });
+      const grad = ctx.createLinearGradient(0,0,1080,1080);
+      grad.addColorStop(0, "#070914"); grad.addColorStop(0.48, "#182048"); grad.addColorStop(1, "#11131e");
+      ctx.fillStyle = grad; ctx.fillRect(0,0,1080,1080);
+      ctx.fillStyle = "rgba(255,213,106,0.14)"; ctx.beginPath(); ctx.arc(870,190,260,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = "rgba(56,245,229,0.12)"; ctx.beginPath(); ctx.arc(180,840,310,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.22)"; ctx.lineWidth = 3; ctx.strokeRect(54,54,972,972);
 
-        inputIds.forEach(id => {
-          const element = document.getElementById(id);
-          if (element) element.value = "";
-        });
-
-        document.getElementById("player1Name").value = "Joel";
-        document.getElementById("player2Name").value = "Joshua";
-
-        scorers = [
-          { name: "", team: "Select Team", goals: "", owner: "" },
-          { name: "", team: "Select Team", goals: "", owner: "" },
-          { name: "", team: "Select Team", goals: "", owner: "" }
-        ];
-
-        renderScorers();
-        saveData();
-      }
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#38f5e5"; ctx.font = "bold 38px Arial"; ctx.fillText("FIFA 25 TOURNAMENT CHAMPION", 540, 150);
+      ctx.fillStyle = "#ffffff"; ctx.font = "bold 72px Arial"; ctx.fillText(t.name.toUpperCase(), 540, 245);
+      ctx.font = "160px Arial"; ctx.fillText("🏆", 540, 430);
+      ctx.fillStyle = "#ffd56a"; ctx.font = "bold 82px Arial"; ctx.fillText(champion, 540, 555);
+      ctx.fillStyle = "#ffffff"; ctx.font = "bold 46px Arial"; ctx.fillText(owner === "-" ? "Owner Pending" : `Owned by ${owner}`, 540, 630);
+      ctx.fillStyle = "rgba(255,255,255,0.86)"; ctx.font = "34px Arial"; ctx.fillText(finalScore, 540, 710);
+      ctx.fillStyle = "rgba(255,255,255,0.78)"; ctx.font = "30px Arial"; ctx.fillText(golden && golden.player ? `Golden Boot: ${golden.player} - ${golden.goals || 0} goals` : "Golden Boot: Pending", 540, 790);
+      ctx.fillStyle = "#38f5e5"; ctx.font = "bold 32px Arial"; ctx.fillText("Joel vs Joshua", 540, 930);
     }
 
-    fillDropdowns();
-    loadData();
+    function downloadChampionCard() {
+      drawChampionCard();
+      const canvas = document.getElementById("championCanvas");
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `${activeTournament().name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-champion-card.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function resetCurrentTournament() {
+      const t = activeTournament();
+      if (!confirm(`Reset ${t.name}?`)) return;
+      const fresh = newTournament(t.name);
+      t.data = fresh.data;
+      saveAppState();
+      renderAll();
+    }
+
+    function exportData() {
+      saveActiveTournament();
+      const blob = new Blob([JSON.stringify(appState, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "fifa25-tournament-backup.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderAll() {
+      renderTournamentTabs();
+      renderFormFromData();
+      saveAppState();
+    }
+
+    loadAppState();
+    renderAll();
   </script>
-
 </body>
 </html>
