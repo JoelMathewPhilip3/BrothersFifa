@@ -793,6 +793,7 @@
       <button class="ghost-button" onclick="duplicateTournament()">Duplicate Current</button>
       <button class="danger-button" onclick="deleteCurrentTournament()">Delete Current</button>
       <span class="sync-status" id="cloudSyncStatus">Firebase: starting...</span>
+      <button class="ghost-button" id="findLogosBtn" onclick="findLogosForAllTeams()">Find Logos</button>
       <button onclick="saveCurrentNow()">Save Current Tournament</button>
       <button class="ghost-button" onclick="exportData()">Export Backup</button>
       <button class="ghost-button" onclick="document.getElementById('importBackupInput').click()">Import Backup</button>
@@ -804,7 +805,9 @@
     const STORAGE_KEY = "fifa26TournamentHubData_v1";
     const FIREBASE_DATABASE_URL = "https://brothers-fifa-default-rtdb.firebaseio.com";
     const FIREBASE_PATH = "fifa26TournamentHub/shared";
-    const FIREBASE_CLOUD_URL = `${FIREBASE_DATABASE_URL.replace(/\/$/, "")}/${FIREBASE_PATH}.json`;
+    const FIREBASE_FALLBACK_PATHS = ["fifa26TournamentHub/shared", "fifa25TournamentHub/fifa26Shared"];
+    let FIREBASE_CLOUD_URL = `${FIREBASE_DATABASE_URL.replace(/\/$/, "")}/${FIREBASE_PATH}.json`;
+    let firebasePermissionBlocked = false;
     const CLIENT_ID_KEY = "fifa26TournamentHubClientId_v1";
     const CLIENT_ID = localStorage.getItem(CLIENT_ID_KEY) || (() => {
       const id = "client_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
@@ -919,12 +922,59 @@
       return code.toUpperCase().replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt()));
     }
 
+    function normalizeTeamKey(value) {
+      return String(value || "").trim().toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, " ").trim();
+    }
+
+    const countryAliases = {
+      "india":"IN", "ireland":"IE", "northern ireland":"GB", "england":"GB", "scotland":"GB", "wales":"GB",
+      "argentina":"AR", "australia":"AU", "austria":"AT", "belgium":"BE", "brazil":"BR", "canada":"CA", "chile":"CL",
+      "colombia":"CO", "croatia":"HR", "denmark":"DK", "ecuador":"EC", "france":"FR", "germany":"DE", "ghana":"GH",
+      "italy":"IT", "japan":"JP", "mexico":"MX", "morocco":"MA", "netherlands":"NL", "norway":"NO", "poland":"PL",
+      "portugal":"PT", "senegal":"SN", "south korea":"KR", "korea republic":"KR", "spain":"ES", "sweden":"SE",
+      "switzerland":"CH", "turkey":"TR", "uruguay":"UY", "usa":"US", "united states":"US", "united states of america":"US"
+    };
+
+    const knownLogoDomains = {
+      "real madrid":"realmadrid.com", "barcelona":"fcbarcelona.com", "fc barcelona":"fcbarcelona.com",
+      "manchester city":"mancity.com", "man city":"mancity.com", "liverpool":"liverpoolfc.com",
+      "manchester united":"manutd.com", "man united":"manutd.com", "chelsea":"chelseafc.com", "arsenal":"arsenal.com",
+      "tottenham":"tottenhamhotspur.com", "spurs":"tottenhamhotspur.com", "bayern munich":"fcbayern.com",
+      "borussia dortmund":"bvb.de", "dortmund":"bvb.de", "psg":"psg.fr", "paris saint germain":"psg.fr",
+      "inter milan":"inter.it", "inter":"inter.it", "ac milan":"acmilan.com", "juventus":"juventus.com",
+      "napoli":"sscnapoli.it", "atletico madrid":"atleticodemadrid.com", "bayer leverkusen":"bayer04.de",
+      "rb leipzig":"rbleipzig.com", "ajax":"ajax.nl", "benfica":"slbenfica.pt", "porto":"fcporto.pt",
+      "sporting cp":"sporting.pt", "roma":"asroma.com", "lazio":"sslazio.it", "newcastle united":"newcastleunited.com",
+      "aston villa":"avfc.co.uk", "west ham":"whufc.com", "sevilla":"sevillafc.es", "villarreal":"villarrealcf.es",
+      "al nassr":"alnassr.sa", "la liga":"laliga.com", "la liga xi":"laliga.com", "laliga xi":"laliga.com",
+      "premier league":"premierleague.com", "premier league xi":"premierleague.com", "serie a xi":"legaseriea.it",
+      "bundesliga xi":"bundesliga.com", "champions league xi":"uefa.com", "world xi":"fifa.com", "classic xi":"ea.com"
+    };
+
+    function getSavedTeamLogo(teamName) {
+      const d = activeTournament()?.data;
+      if (!d || !d.teamLogos) return "";
+      return d.teamLogos[String(teamName || "").trim()] || d.teamLogos[normalizeTeamKey(teamName)] || "";
+    }
+
+    function initialsForTeam(teamName) {
+      const cleaned = String(teamName || "").trim();
+      if (!cleaned || cleaned === "Select Team") return "";
+      return cleaned.split(/\s+/).slice(0, 2).map(x => x[0]).join("").toUpperCase();
+    }
+
     function getTeamIcon(teamName) {
-      const team = teams.find(t => t.name === teamName);
-      if (!team) return "⚽";
-      if (team.logo) return `<img src="${team.logo}" onerror="this.outerHTML='⚽'" alt="${team.name}">`;
-      if (team.code) return countryCodeToFlag(team.code);
-      return team.icon || "⚽";
+      const cleaned = String(teamName || "").trim();
+      if (!cleaned || cleaned === "Select Team") return "";
+      const key = normalizeTeamKey(cleaned);
+      const team = teams.find(t => normalizeTeamKey(t.name) === key);
+      if (team?.code) return countryCodeToFlag(team.code);
+      if (countryAliases[key]) return countryCodeToFlag(countryAliases[key]);
+      const savedLogo = getSavedTeamLogo(cleaned);
+      if (savedLogo) return `<img src="${savedLogo}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
+      if (team?.logo) return `<img src="${team.logo}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${team.name}">`;
+      if (knownLogoDomains[key]) return `<img src="https://logo.clearbit.com/${knownLogoDomains[key]}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
+      return initialsForTeam(cleaned);
     }
 
     function uniqueNames(list) {
@@ -944,6 +994,7 @@
       scoreIds.forEach(id => { if (typeof d[id] !== "string") d[id] = ""; });
       if (!Array.isArray(d.scorers)) d.scorers = [];
       if (!Array.isArray(d.matchHistory)) d.matchHistory = [];
+      if (!d.teamLogos || typeof d.teamLogos !== "object") d.teamLogos = {};
       const customFromSavedSlots = qfTeamIds.concat(semiIds, finalIds, ["champion"])
         .map(id => d[id])
         .filter(name => name && name !== "Select Team" && !knownTeamNames().includes(name));
@@ -1082,6 +1133,44 @@
       el.className = "sync-status" + (mode ? " " + mode : "");
     }
 
+    function firebaseUrlForPath(path) {
+      return `${FIREBASE_DATABASE_URL.replace(/\/$/, "")}/${path}.json`;
+    }
+
+    async function fetchFirebaseJson() {
+      let lastError = null;
+      for (const path of FIREBASE_FALLBACK_PATHS) {
+        const url = firebaseUrlForPath(path);
+        try {
+          const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+          if (response.ok) { FIREBASE_CLOUD_URL = url; firebasePermissionBlocked = false; return await response.json(); }
+          lastError = new Error(`Firebase load HTTP ${response.status} at ${path}`);
+          if (response.status === 401 || response.status === 403) continue;
+        } catch (error) { lastError = error; }
+      }
+      if (lastError && /401|403/.test(String(lastError.message))) firebasePermissionBlocked = true;
+      throw lastError || new Error("Firebase load failed");
+    }
+
+    async function putFirebaseJson(payload) {
+      let lastError = null;
+      const urls = uniqueNames([FIREBASE_CLOUD_URL, ...FIREBASE_FALLBACK_PATHS.map(firebaseUrlForPath)]);
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (response.ok) { FIREBASE_CLOUD_URL = url; firebasePermissionBlocked = false; return true; }
+          lastError = new Error(`Firebase save HTTP ${response.status}`);
+          if (response.status === 401 || response.status === 403) continue;
+        } catch (error) { lastError = error; }
+      }
+      if (lastError && /401|403/.test(String(lastError.message))) firebasePermissionBlocked = true;
+      throw lastError || new Error("Firebase save failed");
+    }
+
     async function loadAppState() {
       let loadedFromFirebase = false;
       let localData = null;
@@ -1094,28 +1183,23 @@
 
       try {
         setCloudStatus("Firebase: loading...", "saving");
-        const response = await fetch(FIREBASE_CLOUD_URL + "?t=" + Date.now(), { cache: "no-store" });
-        if (response.ok) {
-          const cloudData = normalizeCloudState(await response.json());
-          if (cloudData) {
-            if (localData && stateTimeMs(localData) > stateTimeMs(cloudData)) {
-              appState = localData;
-              loadedFromFirebase = false;
-              setCloudStatus("Firebase: local changes pending", "saving");
-            } else {
-              appState = cloudData;
-              loadedFromFirebase = true;
-              lastCloudSignature = cloudSignature(appState);
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-              setCloudStatus("Firebase: synced", "online");
-            }
+        const cloudData = normalizeCloudState(await fetchFirebaseJson());
+        if (cloudData) {
+          if (localData && stateTimeMs(localData) > stateTimeMs(cloudData)) {
+            appState = localData;
+            loadedFromFirebase = false;
+            setCloudStatus("Firebase: local changes pending", "saving");
+          } else {
+            appState = cloudData;
+            loadedFromFirebase = true;
+            lastCloudSignature = cloudSignature(appState);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            setCloudStatus("Firebase: synced", "online");
           }
-        } else {
-          throw new Error("Firebase load HTTP " + response.status);
         }
       } catch (error) {
         console.warn("Firebase load failed. Falling back to this device:", error);
-        setCloudStatus("Firebase: offline backup", "offline");
+        setCloudStatus(firebasePermissionBlocked ? "Firebase: rules blocked" : "Firebase: offline backup", "offline");
       }
 
       if (!loadedFromFirebase && (!appState.tournaments || appState.tournaments.length === 0)) {
@@ -1137,7 +1221,7 @@
     function saveAppState() {
       if (!isApplyingCloudUpdate) markLocalChange();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      if (!cloudReady || isApplyingCloudUpdate) return;
+      if (!cloudReady || firebasePermissionBlocked || isApplyingCloudUpdate) return;
 
       clearTimeout(cloudSaveTimer);
       setCloudStatus("Firebase: saving...", "saving");
@@ -1154,19 +1238,13 @@
           updatedBy: CLIENT_ID
         };
 
-        const response = await fetch(FIREBASE_CLOUD_URL, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) throw new Error("Firebase save HTTP " + response.status);
+        await putFirebaseJson(payload);
 
         lastCloudSignature = cloudSignature(appState);
         setCloudStatus("Firebase: synced", "online");
       } catch (error) {
         console.error("Firebase save failed:", error);
-        setCloudStatus("Firebase: save failed", "offline");
+        setCloudStatus(firebasePermissionBlocked ? "Firebase: rules blocked" : "Firebase: save failed", "offline");
       }
     }
 
@@ -1175,10 +1253,7 @@
         if (!cloudReady || isApplyingCloudUpdate) return;
 
         try {
-          const response = await fetch(FIREBASE_CLOUD_URL + "?t=" + Date.now(), { cache: "no-store" });
-          if (!response.ok) throw new Error("Firebase sync HTTP " + response.status);
-
-          const cloudData = normalizeCloudState(await response.json());
+          const cloudData = normalizeCloudState(await fetchFirebaseJson());
           if (!cloudData) return;
 
           const incomingSignature = cloudSignature(cloudData);
@@ -1215,7 +1290,7 @@
           isApplyingCloudUpdate = false;
         } catch (error) {
           console.warn("Firebase live sync failed:", error);
-          setCloudStatus("Firebase: offline backup", "offline");
+          setCloudStatus(firebasePermissionBlocked ? "Firebase: rules blocked" : "Firebase: offline backup", "offline");
           isApplyingCloudUpdate = false;
         }
       }, 5000);
@@ -1885,7 +1960,7 @@
       const t = activeTournament();
       const d = t.data;
       const champion = d.champion && d.champion !== "Select Team" ? d.champion : "Champion Pending";
-      const owner = champion !== "Champion Pending" ? ownerOfTeamFromTournament(d, champion) : "Winner Pending";
+      const owner = champion !== "Champion Pending" ? ownerOfTeamFromTournament(d, champion) : "Joel vs Joshua";
       const golden = (d.scorers || []).slice().sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0))[0];
       const finalScore = finalScoreText(d);
 
@@ -1907,6 +1982,136 @@
       ctx.fillStyle = "#38f5e5"; ctx.font = "bold 32px Arial"; ctx.fillText("FIFA 26 Tournament Hub", 540, 930);
     }
 
+
+    function setFindLogoButton(text, disabled = false) {
+      const btn = document.getElementById("findLogosBtn");
+      if (!btn) return;
+      btn.textContent = text;
+      btn.disabled = disabled;
+    }
+
+    function imageLooksUsable(url) {
+      return new Promise(resolve => {
+        if (!url) return resolve(false);
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = url;
+        setTimeout(() => resolve(false), 4500);
+      });
+    }
+
+    function cleanWikiImageUrl(url) {
+      return String(url || "").replace(/\/\d+px-([^/]+)$/i, "/240px-$1");
+    }
+
+    function scoreWikiCandidate(page, teamName) {
+      const key = normalizeTeamKey(teamName);
+      const title = normalizeTeamKey(page.title || "");
+      const extract = normalizeTeamKey(page.extract || "");
+      const text = `${title} ${extract}`;
+      let score = 0;
+      if (title.includes(key)) score += 18;
+      if (text.includes("football club") || text.includes("soccer club")) score += 12;
+      if (text.includes("national football team")) score += 12;
+      if (text.includes("logo") || text.includes("crest") || text.includes("emblem") || text.includes("badge")) score += 10;
+      if (text.includes("league") && key.includes("league")) score += 6;
+      if (text.includes("kit") || text.includes("jersey") || text.includes("drawing") || text.includes("cartoon") || text.includes("mascot")) score -= 10;
+      if (page.thumbnail?.source) score += 8;
+      return score;
+    }
+
+    async function searchWikipediaLogo(teamName) {
+      const queries = [
+        `${teamName} logo`,
+        `${teamName} crest`,
+        `${teamName} football club logo`,
+        `${teamName} national football team logo`
+      ];
+      let best = null;
+      for (const q of queries) {
+        try {
+          const url = `https://en.wikipedia.org/w/api.php?origin=*&action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=8&prop=pageimages|extracts&pithumbsize=240&exintro=1&explaintext=1&format=json`;
+          const data = await fetch(url).then(r => r.ok ? r.json() : null);
+          const pages = Object.values(data?.query?.pages || {});
+          for (const page of pages) {
+            const img = cleanWikiImageUrl(page.thumbnail?.source || "");
+            if (!img) continue;
+            const score = scoreWikiCandidate(page, teamName);
+            if (!best || score > best.score) best = { url: img, score };
+          }
+        } catch (error) { console.warn("Wikipedia logo search failed", teamName, error); }
+      }
+      if (best && best.score >= 14 && await imageLooksUsable(best.url)) return best.url;
+      return "";
+    }
+
+    async function searchCommonsLogo(teamName) {
+      const queries = [`${teamName} logo`, `${teamName} crest`, `${teamName} emblem`, `${teamName} badge`];
+      for (const q of queries) {
+        try {
+          const url = `https://commons.wikimedia.org/w/api.php?origin=*&action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url|mime&iiurlwidth=240&format=json`;
+          const data = await fetch(url).then(r => r.ok ? r.json() : null);
+          const pages = Object.values(data?.query?.pages || {});
+          const ranked = pages
+            .map(p => ({ title: p.title || "", url: p.imageinfo?.[0]?.thumburl || p.imageinfo?.[0]?.url || "" }))
+            .filter(p => p.url && /logo|crest|emblem|badge|flag/i.test(p.title) && !/kit|jersey|drawing|cartoon|mascot/i.test(p.title))
+            .sort((a,b) => (normalizeTeamKey(b.title).includes(normalizeTeamKey(teamName)) ? 1 : 0) - (normalizeTeamKey(a.title).includes(normalizeTeamKey(teamName)) ? 1 : 0));
+          for (const item of ranked) {
+            if (await imageLooksUsable(item.url)) return item.url;
+          }
+        } catch (error) { console.warn("Commons logo search failed", teamName, error); }
+      }
+      return "";
+    }
+
+    async function resolveLogoUrlForTeam(teamName) {
+      const cleaned = String(teamName || "").trim();
+      const key = normalizeTeamKey(cleaned);
+      if (!cleaned || cleaned === "Select Team") return "";
+      const known = teams.find(t => normalizeTeamKey(t.name) === key);
+      if (known?.code || countryAliases[key]) return "";
+      if (known?.logo && await imageLooksUsable(known.logo)) return known.logo;
+      if (knownLogoDomains[key]) {
+        const clearbit = `https://logo.clearbit.com/${knownLogoDomains[key]}`;
+        if (await imageLooksUsable(clearbit)) return clearbit;
+      }
+      const wiki = await searchWikipediaLogo(cleaned);
+      if (wiki) return wiki;
+      const commons = await searchCommonsLogo(cleaned);
+      if (commons) return commons;
+      return "";
+    }
+
+    async function findLogosForAllTeams() {
+      saveActiveTournament();
+      const t = activeTournament();
+      const d = ensureTournamentData(t);
+      const pickedTeams = uniqueNames(qfTeamIds.map(id => document.getElementById(id)?.value).filter(v => v && v.trim() && v.trim() !== "Select Team"));
+      if (pickedTeams.length === 0) { alert("Type your quarter-final teams first, then click Find Logos."); return; }
+      setFindLogoButton("Finding logos...", true);
+      let found = 0, flags = 0, missing = [];
+      for (let i = 0; i < pickedTeams.length; i++) {
+        const teamName = pickedTeams[i];
+        const key = normalizeTeamKey(teamName);
+        setFindLogoButton(`Finding ${i + 1}/${pickedTeams.length}...`, true);
+        if (countryAliases[key] || teams.find(t => normalizeTeamKey(t.name) === key)?.code) { flags++; continue; }
+        const url = await resolveLogoUrlForTeam(teamName);
+        if (url) {
+          d.teamLogos[teamName] = url;
+          d.teamLogos[key] = url;
+          found++;
+        } else {
+          missing.push(teamName);
+        }
+      }
+      saveActiveTournament();
+      renderAll();
+      setFindLogoButton("Find Logos", false);
+      const msg = `Done. Flags: ${flags}. Logos found: ${found}.` + (missing.length ? ` Could not find a clean official logo for: ${missing.join(", ")}.` : "");
+      alert(msg);
+    }
+
     function downloadChampionCard() {
       drawChampionCard();
       const canvas = document.getElementById("championCanvas");
@@ -1918,6 +2123,11 @@
 
     function saveCurrentNow() {
       saveActiveTournament();
+      if (firebasePermissionBlocked) {
+        setCloudStatus("Firebase: rules blocked", "offline");
+        alert("Firebase is blocking this path with a 401 Unauthorized error. Your data is saved on this device, but Firebase rules must allow fifa26TournamentHub/shared before cloud save can work.");
+        return;
+      }
       if (cloudReady) {
         setCloudStatus("Firebase: saving now...", "saving");
         saveAppStateToFirebase();
@@ -1990,9 +2200,11 @@
     (async function initApp() {
       await loadAppState();
       renderAll();
-      cloudReady = true;
-      saveAppState();
-      startFirebaseLiveSync();
+      cloudReady = !firebasePermissionBlocked;
+      if (cloudReady) {
+        saveAppState();
+        startFirebaseLiveSync();
+      }
     })();
   </script>
 </body>
