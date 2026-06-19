@@ -652,6 +652,36 @@
     .filter-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .mini-owner { color: var(--gold); font-size: 12px; font-weight: 900; margin-top: 4px; }
 
+    .manual-logo-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto auto auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .manual-logo-preview {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 1px solid var(--line-bright);
+      background: rgba(255,255,255,0.09);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .manual-logo-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    @media (max-width: 760px) {
+      .manual-logo-grid { grid-template-columns: 1fr; }
+      .manual-logo-preview { width: 72px; height: 72px; justify-self: center; }
+    }
+
     .hero-recap {
       max-width: 920px;
       margin: 18px auto 0;
@@ -787,13 +817,30 @@
       </div>
     </section>
 
+
+    <section class="section glass-card">
+      <div class="section-header">
+        <div>
+          <h2>Manual Team Logos</h2>
+          <div class="muted-note">Type the team name exactly as it appears in the bracket, choose a logo image from your files, preview it, then click Go. Save Current Tournament will push it to Firebase.</div>
+        </div>
+      </div>
+      <div class="manual-logo-grid">
+        <input id="manualLogoTeamName" placeholder="Example: La Liga Classic XI">
+        <button class="ghost-button" onclick="document.getElementById('manualLogoFile').click()">Select Image</button>
+        <input id="manualLogoFile" type="file" accept="image/*" hidden onchange="previewManualLogo(event)">
+        <div class="manual-logo-preview" id="manualLogoPreview">Preview</div>
+        <button onclick="applyManualTeamLogo()">Go</button>
+      </div>
+      <div class="muted-note" id="manualLogoStatus">Saved manual logos override any existing logo for the same team name.</div>
+    </section>
+
     <div class="footer-actions">
       <button onclick="createTournament()">+ Create New Tournament</button>
       <button class="ghost-button" onclick="renameTournament()">Rename Current</button>
       <button class="ghost-button" onclick="duplicateTournament()">Duplicate Current</button>
       <button class="danger-button" onclick="deleteCurrentTournament()">Delete Current</button>
       <span class="sync-status" id="cloudSyncStatus">Firebase: starting...</span>
-      <button class="ghost-button" id="findLogosBtn" onclick="findLogosForAllTeams()">Find Logos</button>
       <button onclick="saveCurrentNow()">Save Current Tournament</button>
       <button class="ghost-button" onclick="exportData()">Export Backup</button>
       <button class="ghost-button" onclick="document.getElementById('importBackupInput').click()">Import Backup</button>
@@ -951,6 +998,29 @@
       "bundesliga xi":"bundesliga.com", "champions league xi":"uefa.com", "world xi":"fifa.com", "classic xi":"ea.com"
     };
 
+
+    const defaultLocalLogoFiles = {
+      "la liga classic xi": "laliga.jpg",
+      "laliga classic xi": "laliga.jpg",
+      "la liga xi": "laliga.jpg",
+      "laliga xi": "laliga.jpg",
+      "real madrid xi": "madrid.jpg",
+      "madrid xi": "madrid.jpg",
+      "serie a xi": "seriaa.jpg",
+      "seria a xi": "seriaa.jpg",
+      "seria a xi": "seriaa.jpg",
+      "bundesliga xi": "bundesliga.jpg",
+      "fc bayern xi": "bayern.jpg",
+      "bayern xi": "bayern.jpg",
+      "bayern munich xi": "bayern.jpg",
+      "premier league xi": "premier.jpg",
+      "epl xi": "premier.jpg",
+      "juventus xi": "juventus.jpg",
+      "juve xi": "juventus.jpg",
+      "ligue 1 xi": "ligue1.jpg",
+      "ligue one xi": "ligue1.jpg"
+    };
+
     function getSavedTeamLogo(teamName) {
       const d = activeTournament()?.data;
       if (!d || !d.teamLogos) return "";
@@ -971,6 +1041,8 @@
       if (team?.code) return countryCodeToFlag(team.code);
       if (countryAliases[key]) return countryCodeToFlag(countryAliases[key]);
       const savedLogo = getSavedTeamLogo(cleaned);
+      if (savedLogo && savedLogo.startsWith("data:")) return `<img src="${savedLogo}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
+      if (defaultLocalLogoFiles[key]) return `<img src="${defaultLocalLogoFiles[key]}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
       if (savedLogo) return `<img src="${savedLogo}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
       if (team?.logo) return `<img src="${team.logo}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${team.name}">`;
       if (knownLogoDomains[key]) return `<img src="https://logo.clearbit.com/${knownLogoDomains[key]}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
@@ -1221,7 +1293,7 @@
     function saveAppState() {
       if (!isApplyingCloudUpdate) markLocalChange();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      if (!cloudReady || firebasePermissionBlocked || isApplyingCloudUpdate) return;
+      if (!cloudReady || isApplyingCloudUpdate) return;
 
       clearTimeout(cloudSaveTimer);
       setCloudStatus("Firebase: saving...", "saving");
@@ -1981,135 +2053,70 @@
       ctx.fillStyle = "rgba(255,255,255,0.78)"; ctx.font = "30px Arial"; ctx.fillText(golden && golden.player ? `Golden Boot: ${golden.player} - ${golden.goals || 0} goals` : "Golden Boot: Pending", 540, 790);
       ctx.fillStyle = "#38f5e5"; ctx.font = "bold 32px Arial"; ctx.fillText("FIFA 26 Tournament Hub", 540, 930);
     }
+    let pendingManualLogoDataUrl = "";
 
-
-    function setFindLogoButton(text, disabled = false) {
-      const btn = document.getElementById("findLogosBtn");
-      if (!btn) return;
-      btn.textContent = text;
-      btn.disabled = disabled;
+    function setManualLogoStatus(message) {
+      const el = document.getElementById("manualLogoStatus");
+      if (el) el.textContent = message;
     }
 
-    function imageLooksUsable(url) {
+    function previewManualLogo(event) {
+      const file = event?.target?.files?.[0];
+      pendingManualLogoDataUrl = "";
+      const preview = document.getElementById("manualLogoPreview");
+      if (!file) {
+        if (preview) preview.textContent = "Preview";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingManualLogoDataUrl = String(reader.result || "");
+        if (preview) preview.innerHTML = `<img src="${pendingManualLogoDataUrl}" alt="Logo preview">`;
+        setManualLogoStatus(`Selected ${file.name}. Click Go to attach it to the typed team name.`);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resizeLogoDataUrl(dataUrl, maxSize = 220) {
       return new Promise(resolve => {
-        if (!url) return resolve(false);
+        if (!dataUrl) return resolve("");
         const img = new Image();
-        img.onload = () => resolve(true);
-        img.onerror = () => resolve(false);
-        img.src = url;
-        setTimeout(() => resolve(false), 4500);
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = maxSize;
+          canvas.height = maxSize;
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, maxSize, maxSize);
+          const scale = Math.min(maxSize / img.width, maxSize / img.height);
+          const w = img.width * scale;
+          const h = img.height * scale;
+          const x = (maxSize - w) / 2;
+          const y = (maxSize - h) / 2;
+          ctx.drawImage(img, x, y, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.86));
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
       });
     }
 
-    function cleanWikiImageUrl(url) {
-      return String(url || "").replace(/\/\d+px-([^/]+)$/i, "/240px-$1");
-    }
-
-    function scoreWikiCandidate(page, teamName) {
-      const key = normalizeTeamKey(teamName);
-      const title = normalizeTeamKey(page.title || "");
-      const extract = normalizeTeamKey(page.extract || "");
-      const text = `${title} ${extract}`;
-      let score = 0;
-      if (title.includes(key)) score += 18;
-      if (text.includes("football club") || text.includes("soccer club")) score += 12;
-      if (text.includes("national football team")) score += 12;
-      if (text.includes("logo") || text.includes("crest") || text.includes("emblem") || text.includes("badge")) score += 10;
-      if (text.includes("league") && key.includes("league")) score += 6;
-      if (text.includes("kit") || text.includes("jersey") || text.includes("drawing") || text.includes("cartoon") || text.includes("mascot")) score -= 10;
-      if (page.thumbnail?.source) score += 8;
-      return score;
-    }
-
-    async function searchWikipediaLogo(teamName) {
-      const queries = [
-        `${teamName} logo`,
-        `${teamName} crest`,
-        `${teamName} football club logo`,
-        `${teamName} national football team logo`
-      ];
-      let best = null;
-      for (const q of queries) {
-        try {
-          const url = `https://en.wikipedia.org/w/api.php?origin=*&action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=8&prop=pageimages|extracts&pithumbsize=240&exintro=1&explaintext=1&format=json`;
-          const data = await fetch(url).then(r => r.ok ? r.json() : null);
-          const pages = Object.values(data?.query?.pages || {});
-          for (const page of pages) {
-            const img = cleanWikiImageUrl(page.thumbnail?.source || "");
-            if (!img) continue;
-            const score = scoreWikiCandidate(page, teamName);
-            if (!best || score > best.score) best = { url: img, score };
-          }
-        } catch (error) { console.warn("Wikipedia logo search failed", teamName, error); }
-      }
-      if (best && best.score >= 14 && await imageLooksUsable(best.url)) return best.url;
-      return "";
-    }
-
-    async function searchCommonsLogo(teamName) {
-      const queries = [`${teamName} logo`, `${teamName} crest`, `${teamName} emblem`, `${teamName} badge`];
-      for (const q of queries) {
-        try {
-          const url = `https://commons.wikimedia.org/w/api.php?origin=*&action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url|mime&iiurlwidth=240&format=json`;
-          const data = await fetch(url).then(r => r.ok ? r.json() : null);
-          const pages = Object.values(data?.query?.pages || {});
-          const ranked = pages
-            .map(p => ({ title: p.title || "", url: p.imageinfo?.[0]?.thumburl || p.imageinfo?.[0]?.url || "" }))
-            .filter(p => p.url && /logo|crest|emblem|badge|flag/i.test(p.title) && !/kit|jersey|drawing|cartoon|mascot/i.test(p.title))
-            .sort((a,b) => (normalizeTeamKey(b.title).includes(normalizeTeamKey(teamName)) ? 1 : 0) - (normalizeTeamKey(a.title).includes(normalizeTeamKey(teamName)) ? 1 : 0));
-          for (const item of ranked) {
-            if (await imageLooksUsable(item.url)) return item.url;
-          }
-        } catch (error) { console.warn("Commons logo search failed", teamName, error); }
-      }
-      return "";
-    }
-
-    async function resolveLogoUrlForTeam(teamName) {
-      const cleaned = String(teamName || "").trim();
-      const key = normalizeTeamKey(cleaned);
-      if (!cleaned || cleaned === "Select Team") return "";
-      const known = teams.find(t => normalizeTeamKey(t.name) === key);
-      if (known?.code || countryAliases[key]) return "";
-      if (known?.logo && await imageLooksUsable(known.logo)) return known.logo;
-      if (knownLogoDomains[key]) {
-        const clearbit = `https://logo.clearbit.com/${knownLogoDomains[key]}`;
-        if (await imageLooksUsable(clearbit)) return clearbit;
-      }
-      const wiki = await searchWikipediaLogo(cleaned);
-      if (wiki) return wiki;
-      const commons = await searchCommonsLogo(cleaned);
-      if (commons) return commons;
-      return "";
-    }
-
-    async function findLogosForAllTeams() {
-      saveActiveTournament();
+    async function applyManualTeamLogo() {
+      const teamInput = document.getElementById("manualLogoTeamName");
+      const fileInput = document.getElementById("manualLogoFile");
+      const teamName = String(teamInput?.value || "").trim();
+      if (!teamName) { alert("Type the team name first."); return; }
+      if (!pendingManualLogoDataUrl) { alert("Select a logo image first."); return; }
       const t = activeTournament();
       const d = ensureTournamentData(t);
-      const pickedTeams = uniqueNames(qfTeamIds.map(id => document.getElementById(id)?.value).filter(v => v && v.trim() && v.trim() !== "Select Team"));
-      if (pickedTeams.length === 0) { alert("Type your quarter-final teams first, then click Find Logos."); return; }
-      setFindLogoButton("Finding logos...", true);
-      let found = 0, flags = 0, missing = [];
-      for (let i = 0; i < pickedTeams.length; i++) {
-        const teamName = pickedTeams[i];
-        const key = normalizeTeamKey(teamName);
-        setFindLogoButton(`Finding ${i + 1}/${pickedTeams.length}...`, true);
-        if (countryAliases[key] || teams.find(t => normalizeTeamKey(t.name) === key)?.code) { flags++; continue; }
-        const url = await resolveLogoUrlForTeam(teamName);
-        if (url) {
-          d.teamLogos[teamName] = url;
-          d.teamLogos[key] = url;
-          found++;
-        } else {
-          missing.push(teamName);
-        }
-      }
+      const compressed = await resizeLogoDataUrl(pendingManualLogoDataUrl, 220);
+      d.teamLogos[teamName] = compressed;
+      d.teamLogos[normalizeTeamKey(teamName)] = compressed;
+      d.customTeams = uniqueNames([...(d.customTeams || []), teamName]);
       saveActiveTournament();
       renderAll();
-      setFindLogoButton("Find Logos", false);
-      const msg = `Done. Flags: ${flags}. Logos found: ${found}.` + (missing.length ? ` Could not find a clean official logo for: ${missing.join(", ")}.` : "");
-      alert(msg);
+      pendingManualLogoDataUrl = "";
+      if (fileInput) fileInput.value = "";
+      setManualLogoStatus(`Logo attached for ${teamName}. Click Save Current Tournament to force it into Firebase now.`);
     }
 
     function downloadChampionCard() {
@@ -2123,11 +2130,6 @@
 
     function saveCurrentNow() {
       saveActiveTournament();
-      if (firebasePermissionBlocked) {
-        setCloudStatus("Firebase: rules blocked", "offline");
-        alert("Firebase is blocking this path with a 401 Unauthorized error. Your data is saved on this device, but Firebase rules must allow fifa26TournamentHub/shared before cloud save can work.");
-        return;
-      }
       if (cloudReady) {
         setCloudStatus("Firebase: saving now...", "saving");
         saveAppStateToFirebase();
@@ -2200,11 +2202,9 @@
     (async function initApp() {
       await loadAppState();
       renderAll();
-      cloudReady = !firebasePermissionBlocked;
-      if (cloudReady) {
-        saveAppState();
-        startFirebaseLiveSync();
-      }
+      cloudReady = true;
+      saveAppState();
+      startFirebaseLiveSync();
     })();
   </script>
 </body>
