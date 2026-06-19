@@ -790,7 +790,7 @@
         </div>
         <div class="scorer-tools">
           <span class="muted-note">Show</span>
-          <select id="scorerLimit" onchange="renderScorers()"><option value="5">Top 5</option><option value="10" selected>Top 10</option><option value="20">Top 20</option></select>
+          <select id="scorerLimit" onchange="renderScorers()"><option value="5" selected>Top 5</option><option value="10">Top 10</option><option value="20">Top 20</option></select>
           <input class="player-search" id="scorerSearchInput" placeholder="Search or type player name" oninput="renderScorers()">
           <select id="newScorerTeam"></select>
           <input id="newScorerGoals" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Goals">
@@ -817,7 +817,7 @@
     <section class="section glass-card">
       <div class="section-header">
         <div><h2>All-Time Golden Boot</h2><div class="muted-note">Only players with 3+ total goals are shown.</div></div>
-        <div class="filter-row"><span class="muted-note">Show</span><select id="goldenBootLimit" onchange="renderAllTimeGoldenBoot()"><option value="5">Top 5</option><option value="10" selected>Top 10</option><option value="20">Top 20</option></select></div>
+        <div class="filter-row"><span class="muted-note">Show</span><select id="goldenBootLimit" onchange="renderAllTimeGoldenBoot()"><option value="5" selected>Top 5</option><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
       </div>
       <div class="table-wrapper">
         <table>
@@ -879,8 +879,8 @@
   <script>
     const STORAGE_KEY = "fifa26TournamentHubData_v1";
     const FIREBASE_DATABASE_URL = "https://brothers-fifa-default-rtdb.firebaseio.com";
-    const FIREBASE_PATH = "fifa26TournamentHub/shared";
-    const FIREBASE_FALLBACK_PATHS = ["fifa26TournamentHub/shared", "fifa25TournamentHub/fifa26Shared"];
+    const FIREBASE_PATH = "fifa25TournamentHub/fifa26Shared";
+    const FIREBASE_FALLBACK_PATHS = ["fifa25TournamentHub/fifa26Shared"];
     let FIREBASE_CLOUD_URL = `${FIREBASE_DATABASE_URL.replace(/\/$/, "")}/${FIREBASE_PATH}.json`;
     let firebasePermissionBlocked = false;
     const CLIENT_ID_KEY = "fifa26TournamentHubClientId_v1";
@@ -1237,6 +1237,7 @@
     }
 
     async function fetchFirebaseJson() {
+      if (firebasePermissionBlocked) throw new Error("Firebase permission already blocked");
       let lastError = null;
       for (const path of FIREBASE_FALLBACK_PATHS) {
         const url = firebaseUrlForPath(path);
@@ -1244,14 +1245,14 @@
           const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
           if (response.ok) { FIREBASE_CLOUD_URL = url; firebasePermissionBlocked = false; return await response.json(); }
           lastError = new Error(`Firebase load HTTP ${response.status} at ${path}`);
-          if (response.status === 401 || response.status === 403) continue;
+          if (response.status === 401 || response.status === 403) { firebasePermissionBlocked = true; break; }
         } catch (error) { lastError = error; }
       }
-      if (lastError && /401|403/.test(String(lastError.message))) firebasePermissionBlocked = true;
       throw lastError || new Error("Firebase load failed");
     }
 
     async function putFirebaseJson(payload) {
+      if (firebasePermissionBlocked) throw new Error("Firebase permission already blocked");
       let lastError = null;
       const urls = uniqueNames([FIREBASE_CLOUD_URL, ...FIREBASE_FALLBACK_PATHS.map(firebaseUrlForPath)]);
       for (const url of urls) {
@@ -1263,10 +1264,9 @@
           });
           if (response.ok) { FIREBASE_CLOUD_URL = url; firebasePermissionBlocked = false; return true; }
           lastError = new Error(`Firebase save HTTP ${response.status}`);
-          if (response.status === 401 || response.status === 403) continue;
+          if (response.status === 401 || response.status === 403) { firebasePermissionBlocked = true; break; }
         } catch (error) { lastError = error; }
       }
-      if (lastError && /401|403/.test(String(lastError.message))) firebasePermissionBlocked = true;
       throw lastError || new Error("Firebase save failed");
     }
 
@@ -1320,7 +1320,7 @@
     function saveAppState() {
       if (!isApplyingCloudUpdate) markLocalChange();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      if (!cloudReady || isApplyingCloudUpdate) return;
+      if (!cloudReady || isApplyingCloudUpdate || firebasePermissionBlocked) return;
 
       clearTimeout(cloudSaveTimer);
       setCloudStatus("Firebase: saving...", "saving");
@@ -1328,6 +1328,10 @@
     }
 
     async function saveAppStateToFirebase() {
+      if (firebasePermissionBlocked) {
+        setCloudStatus("Firebase: rules blocked", "offline");
+        return;
+      }
       try {
         const payload = {
           activeId: appState.activeId,
@@ -1349,7 +1353,7 @@
 
     function startFirebaseLiveSync() {
       setInterval(async () => {
-        if (!cloudReady || isApplyingCloudUpdate) return;
+        if (!cloudReady || isApplyingCloudUpdate || firebasePermissionBlocked) return;
 
         try {
           const cloudData = normalizeCloudState(await fetchFirebaseJson());
@@ -1693,7 +1697,7 @@
       const d = ensureTournamentData(t);
       d.scorers.forEach(s => { s.owner = ownerOfTeamFromTournament(d, s.team); });
       const query = String(document.getElementById("scorerSearchInput")?.value || "").trim().toLowerCase();
-      const limit = Number(document.getElementById("scorerLimit")?.value || 10);
+      const limit = Number(document.getElementById("scorerLimit")?.value || 5);
       let sorted = d.scorers
         .map((s, originalIndex) => ({...s, originalIndex}))
         .sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0));
@@ -1709,7 +1713,7 @@
         tr.innerHTML = `
           <td><span class="rank-badge">${rankIndex + 1}</span></td>
           <td><div class="player-cell"><span class="scorer-logo">${teamLogoHtml(scorer.team)}</span><input value="${escapeAttr(scorer.player || "")}" placeholder="Type player name" oninput="updateScorer(${scorer.originalIndex}, 'player', this.value, false)" onchange="renderScorers()"></div></td>
-          <td><strong>${escapeAttr(scorer.owner || ownerOfTeamFromTournament(d, scorer.team))}</strong></td>
+          <td><strong>${escapeAttr(scorer.owner || ownerOfTeamFromTournament(d, scorer.team))}</strong><div class="mini-owner">${escapeAttr(scorer.team || "")}</div></td>
           <td><input type="text" inputmode="numeric" pattern="[0-9]*" value="${escapeAttr(scorer.goals || "")}" placeholder="Goals" oninput="updateScorer(${scorer.originalIndex}, 'goals', this.value, false)" onchange="renderScorers()"></td>
           <td><button class="small-danger" onclick="deleteScorerRow(${scorer.originalIndex})">Delete</button></td>
         `;
@@ -2023,7 +2027,7 @@
     function renderAllTimeGoldenBoot() {
       const body = document.getElementById("allTimeGoldenBootBody");
       if (!body) return;
-      const limit = Number(document.getElementById("goldenBootLimit")?.value || 10);
+      const limit = Number(document.getElementById("goldenBootLimit")?.value || 5);
       const map = new Map();
       appState.tournaments.forEach(t => {
         const d = ensureTournamentData(t);
