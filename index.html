@@ -266,6 +266,8 @@
       margin-bottom: 10px;
     }
 
+    .team-row.qf-row { grid-template-columns: 38px 1fr 1fr 92px; }
+    .custom-team-input { background: rgba(255,255,255,0.93); }
     .team-row.simple { grid-template-columns: 38px 1fr; }
     .team-row:last-child { margin-bottom: 0; }
 
@@ -631,6 +633,9 @@
       .stats-grid, .picked-grid, .rivalry-grid { grid-template-columns: 1fr; }
       .section, .bracket-wrapper { padding: 14px; border-radius: 20px; }
       .team-row { grid-template-columns: 34px 1fr 82px; }
+      .team-row.qf-row { grid-template-columns: 34px 1fr; }
+      .team-row.qf-row select[id^='owner'] { grid-column: 2; }
+      .team-row.qf-row .custom-team-input { grid-column: 2; }
       .team-icon { width: 34px; height: 34px; min-width: 34px; font-size: 21px; }
     }
   </style>
@@ -668,11 +673,11 @@
     <section class="bracket-wrapper">
       <div class="bracket pro-bracket">
         <div class="round">
-          <h2 class="round-title">Quarter Finals - Pick 8 Teams</h2>
-          <div class="match"><div class="match-label"><span>QF 1</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team1"></span><select id="team1" onchange="updateTeamPick(1)"></select><select id="owner1" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team2"></span><select id="team2" onchange="updateTeamPick(2)"></select><select id="owner2" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
-          <div class="match"><div class="match-label"><span>QF 2</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team3"></span><select id="team3" onchange="updateTeamPick(3)"></select><select id="owner3" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team4"></span><select id="team4" onchange="updateTeamPick(4)"></select><select id="owner4" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
-          <div class="match"><div class="match-label"><span>QF 3</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team5"></span><select id="team5" onchange="updateTeamPick(5)"></select><select id="owner5" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team6"></span><select id="team6" onchange="updateTeamPick(6)"></select><select id="owner6" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
-          <div class="match"><div class="match-label"><span>QF 4</span><span>Owner</span></div><div class="team-row"><span class="team-icon" id="icon-team7"></span><select id="team7" onchange="updateTeamPick(7)"></select><select id="owner7" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row"><span class="team-icon" id="icon-team8"></span><select id="team8" onchange="updateTeamPick(8)"></select><select id="owner8" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
+          <h2 class="round-title">Quarter Finals - Pick 8 Teams / Custom Teams</h2>
+          <div class="match"><div class="match-label"><span>QF 1</span><span>Owner</span></div><div class="team-row qf-row"><span class="team-icon" id="icon-team1"></span><select id="team1" onchange="updateTeamPick(1)"></select><input class="custom-team-input" id="customTeam1" placeholder="Type custom team" onkeydown="handleCustomTeamKey(event,1)" onblur="applyCustomTeam(1)"><select id="owner1" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row qf-row"><span class="team-icon" id="icon-team2"></span><select id="team2" onchange="updateTeamPick(2)"></select><input class="custom-team-input" id="customTeam2" placeholder="Type custom team" onkeydown="handleCustomTeamKey(event,2)" onblur="applyCustomTeam(2)"><select id="owner2" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
+          <div class="match"><div class="match-label"><span>QF 2</span><span>Owner</span></div><div class="team-row qf-row"><span class="team-icon" id="icon-team3"></span><select id="team3" onchange="updateTeamPick(3)"></select><input class="custom-team-input" id="customTeam3" placeholder="Type custom team" onkeydown="handleCustomTeamKey(event,3)" onblur="applyCustomTeam(3)"><select id="owner3" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row qf-row"><span class="team-icon" id="icon-team4"></span><select id="team4" onchange="updateTeamPick(4)"></select><input class="custom-team-input" id="customTeam4" placeholder="Type custom team" onkeydown="handleCustomTeamKey(event,4)" onblur="applyCustomTeam(4)"><select id="owner4" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
+          <div class="match"><div class="match-label"><span>QF 3</span><span>Owner</span></div><div class="team-row qf-row"><span class="team-icon" id="icon-team5"></span><select id="team5" onchange="updateTeamPick(5)"></select><input class="custom-team-input" id="customTeam5" placeholder="Type custom team" onkeydown="handleCustomTeamKey(event,5)" onblur="applyCustomTeam(5)"><select id="owner5" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row qf-row"><span class="team-icon" id="icon-team6"></span><select id="team6" onchange="updateTeamPick(6)"></select><input class="custom-team-input" id="customTeam6" placeholder="Type custom team" onkeydown="handleCustomTeamKey(event,6)" onblur="applyCustomTeam(6)"><select id="owner6" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
+          <div class="match"><div class="match-label"><span>QF 4</span><span>Owner</span></div><div class="team-row qf-row"><span class="team-icon" id="icon-team7"></span><select id="team7" onchange="updateTeamPick(7)"></select><input class="custom-team-input" id="customTeam7" placeholder="Type custom team" onkeydown="handleCustomTeamKey(event,7)" onblur="applyCustomTeam(7)"><select id="owner7" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div><div class="team-row qf-row"><span class="team-icon" id="icon-team8"></span><select id="team8" onchange="updateTeamPick(8)"></select><input class="custom-team-input" id="customTeam8" placeholder="Type custom team" onkeydown="handleCustomTeamKey(event,8)" onblur="applyCustomTeam(8)"><select id="owner8" onchange="saveActiveTournament()"><option>Joel</option><option>Joshua</option></select></div></div>
         </div>
 
         <div class="round">
@@ -695,7 +700,7 @@
     </section>
 
     <section class="section glass-card">
-      <div class="section-header"><h2>Picked Teams</h2><span class="muted-note">Quarter-final owner picks. Semi, final, and champion dropdowns are limited to the valid teams from the previous round.</span></div>
+      <div class="section-header"><h2>Picked Teams</h2><span class="muted-note">Quarter-final owner picks. Use the Custom Team option to add any team. Semi, final, and champion dropdowns stay limited to the valid teams from the previous round.</span></div>
       <div class="picked-grid" id="pickedTeamsGrid"></div>
     </section>
 
@@ -919,10 +924,73 @@
       return team.icon || "⚽";
     }
 
-    function fillTeamSelect(select, allowedNames = null, includePlaceholder = true) {
+    function uniqueNames(list) {
+      return [...new Set((list || []).map(x => String(x || "").trim()).filter(Boolean))];
+    }
+
+    function knownTeamNames() {
+      return teams.map(t => t.name);
+    }
+
+    function ensureTournamentData(t) {
+      if (!t.data) t.data = {};
+      const d = t.data;
+      qfTeamIds.forEach(id => { if (!d[id]) d[id] = "Select Team"; });
+      ownerIds.forEach(id => { if (!d[id]) d[id] = "Joel"; });
+      semiIds.concat(finalIds, ["champion"]).forEach(id => { if (!d[id]) d[id] = "Select Team"; });
+      scoreIds.forEach(id => { if (typeof d[id] !== "string") d[id] = ""; });
+      if (!Array.isArray(d.scorers)) d.scorers = [];
+      if (!Array.isArray(d.matchHistory)) d.matchHistory = [];
+      const customFromSavedSlots = qfTeamIds.concat(semiIds, finalIds, ["champion"])
+        .map(id => d[id])
+        .filter(name => name && name !== "Select Team" && !knownTeamNames().includes(name));
+      d.customTeams = uniqueNames([...(Array.isArray(d.customTeams) ? d.customTeams : []), ...customFromSavedSlots]);
+      return d;
+    }
+
+    function getCustomTeams() {
+      const t = activeTournament();
+      if (!t) return [];
+      const d = ensureTournamentData(t);
+      return d.customTeams || [];
+    }
+
+    function allSelectableTeams() {
+      return uniqueNames([...knownTeamNames(), ...getCustomTeams()]);
+    }
+
+    function addCustomTeamToTournament(teamName) {
+      const cleaned = String(teamName || "").trim();
+      if (!cleaned || cleaned === "Select Team" || cleaned === "__custom_team__") return null;
+      const d = ensureTournamentData(activeTournament());
+      d.customTeams = uniqueNames([...(d.customTeams || []), cleaned]);
+      return cleaned;
+    }
+
+    function handleCustomTeamKey(event, num) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        applyCustomTeam(num);
+      }
+    }
+
+    function applyCustomTeam(num) {
+      const input = document.getElementById(`customTeam${num}`);
+      if (!input) return;
+      const added = addCustomTeamToTournament(input.value);
+      if (!added) return;
+      const t = activeTournament();
+      const d = ensureTournamentData(t);
+      d[`team${num}`] = added;
+      input.value = "";
+      saveAppState();
+      renderAll();
+    }
+
+    function fillTeamSelect(select, allowedNames = null, includePlaceholder = true, allowCustom = false) {
       const current = select.value;
       select.innerHTML = "";
-      const names = allowedNames || teams.map(t => t.name);
+      const names = allowedNames ? uniqueNames(allowedNames) : allSelectableTeams();
       const addOption = (name, labelPrefix = "") => {
         const team = teams.find(t => t.name === name) || { name, icon: "⚽" };
         const option = document.createElement("option");
@@ -934,6 +1002,12 @@
       };
       if (includePlaceholder && !names.includes("Select Team")) addOption("Select Team");
       names.forEach(name => addOption(name));
+      if (allowCustom) {
+        const option = document.createElement("option");
+        option.value = "__custom_team__";
+        option.textContent = "➕ Add custom team...";
+        select.appendChild(option);
+      }
       if ([...select.options].some(o => o.value === current)) select.value = current;
     }
 
@@ -950,6 +1024,7 @@
           semi1: "Select Team", semi2: "Select Team", semi3: "Select Team", semi4: "Select Team",
           final1: "Select Team", final2: "Select Team", champion: "Select Team",
           scoreSemi1: "", scoreSemi2: "", scoreFinal: "",
+          customTeams: [],
           matchHistory: [],
           scorers: [
             { player: "", team: "Select Team", goals: 0, owner: "Joel" },
@@ -1049,6 +1124,8 @@
         appState = { activeId: first.id, tournaments: [first], updatedAt: new Date().toISOString(), lastUpdated: new Date().toISOString(), updatedBy: CLIENT_ID };
       }
 
+      appState.tournaments.forEach(ensureTournamentData);
+
       if (!appState.activeId || !appState.tournaments.some(t => t.id === appState.activeId)) {
         appState.activeId = appState.tournaments[0].id;
       }
@@ -1141,7 +1218,11 @@
       }, 5000);
     }
 
-    function activeTournament() { return appState.tournaments.find(t => t.id === appState.activeId); }
+    function activeTournament() {
+      const t = appState.tournaments.find(t => t.id === appState.activeId);
+      if (t) ensureTournamentData(t);
+      return t;
+    }
 
     function createTournament() {
       const name = prompt("Tournament name? Example: Christmas Cup, Summer League, Round 3");
@@ -1198,8 +1279,8 @@
 
     function renderFormFromData() {
       const t = activeTournament();
-      const d = t.data;
-      qfTeamIds.forEach(id => { fillTeamSelect(document.getElementById(id), null, true); document.getElementById(id).value = d[id] || "Select Team"; updateIcon(id); });
+      const d = ensureTournamentData(t);
+      qfTeamIds.forEach(id => { fillTeamSelect(document.getElementById(id), null, true, true); document.getElementById(id).value = d[id] || "Select Team"; updateIcon(id); });
       ownerIds.forEach(id => { document.getElementById(id).value = d[id] || "Joel"; });
       refreshProgressionDropdowns(false);
       semiIds.concat(finalIds, ["champion"]).forEach(id => { if (d[id]) document.getElementById(id).value = d[id]; updateIcon(id); });
@@ -1218,7 +1299,7 @@
 
     function saveActiveTournament() {
       const t = activeTournament();
-      const d = t.data;
+      const d = ensureTournamentData(t);
       qfTeamIds.concat(ownerIds, semiIds, finalIds, ["champion"], scoreIds).forEach(id => {
         const el = document.getElementById(id);
         if (el) d[id] = el.value;
@@ -1241,6 +1322,13 @@
     }
 
     function updateTeamPick(num) {
+      const select = document.getElementById("team" + num);
+      if (select && select.value === "__custom_team__") {
+        const customName = prompt("Enter custom team name:");
+        const added = addCustomTeamToTournament(customName);
+        fillTeamSelect(select, null, true, true);
+        select.value = added || "Select Team";
+      }
       updateIcon("team" + num);
       refreshProgressionDropdowns(true);
       refreshScorerTeamChoices();
@@ -1254,7 +1342,9 @@
     }
 
     function getPickedTeams() {
-      return qfTeamIds.map((id, i) => ({ team: document.getElementById(id).value, owner: document.getElementById("owner" + (i+1)).value })).filter(x => x.team && x.team !== "Select Team");
+      return qfTeamIds
+        .map((id, i) => ({ team: document.getElementById(id).value, owner: document.getElementById("owner" + (i+1)).value }))
+        .filter(x => x.team && x.team !== "Select Team" && x.team !== "__custom_team__");
     }
 
     function refreshProgressionDropdowns(resetInvalid) {
@@ -1332,8 +1422,9 @@
 
     function addScorerRow() {
       const t = activeTournament();
+      const d = ensureTournamentData(t);
       const firstTeam = getPickedTeams()[0]?.team || "Select Team";
-      t.data.scorers.push({ player: "", team: firstTeam, goals: 0, owner: getOwnerForTeam(firstTeam) });
+      d.scorers.push({ player: "", team: firstTeam, goals: 0, owner: getOwnerForTeam(firstTeam) });
       saveAppState();
       renderScorers();
       renderTrophyCabinet();
@@ -1346,7 +1437,8 @@
 
     function deleteScorerRow(originalIndex) {
       const t = activeTournament();
-      t.data.scorers.splice(originalIndex, 1);
+      const d = ensureTournamentData(t);
+      d.scorers.splice(originalIndex, 1);
       saveAppState();
       renderScorers();
       renderAllTimeGoldenBoot();
@@ -1354,8 +1446,10 @@
       updateStats();
     }
 
-    function updateScorer(originalIndex, field, value) {
-      const scorer = activeTournament().data.scorers[originalIndex];
+    function updateScorer(originalIndex, field, value, rerender = true) {
+      const d = ensureTournamentData(activeTournament());
+      const scorer = d.scorers[originalIndex];
+      if (!scorer) return;
       scorer[field] = field === "goals" ? Number(value || 0) : value;
       if (field === "team") {
         scorer.owner = getOwnerForTeam(value);
@@ -1363,24 +1457,27 @@
         if (!suggested.includes(scorer.player)) scorer.player = "";
       }
       saveAppState();
-      renderScorers();
+      if (rerender) renderScorers();
       renderAllTimeGoldenBoot();
       renderStoryRecap();
+      renderRivalryStats();
       updateStats();
     }
 
     function refreshScorerTeamChoices() {
       const validTeams = getPickedTeams().map(x => x.team);
       const t = activeTournament();
-      t.data.scorers.forEach(s => { if (!validTeams.includes(s.team)) s.team = validTeams[0] || "Select Team"; });
+      const d = ensureTournamentData(t);
+      d.scorers.forEach(s => { if (!validTeams.includes(s.team)) s.team = validTeams[0] || "Select Team"; });
       renderScorers();
     }
 
     function renderScorers() {
       const tbody = document.getElementById("scorerTableBody");
       const t = activeTournament();
+      const d = ensureTournamentData(t);
       const validTeams = getPickedTeams().map(x => x.team);
-      const sorted = t.data.scorers.map((s, originalIndex) => ({...s, originalIndex})).sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0));
+      const sorted = d.scorers.map((s, originalIndex) => ({...s, originalIndex})).sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0));
       tbody.innerHTML = "";
       sorted.forEach((scorer, rankIndex) => {
         const teamOptions = ["Select Team"].concat(validTeams).map(team => `<option value="${escapeAttr(team)}" ${team === scorer.team ? "selected" : ""}>${team === "Select Team" ? "⚽" : ""} ${escapeAttr(team)}</option>`).join("");
@@ -1395,7 +1492,7 @@
           <td><select onchange="updateScorer(${scorer.originalIndex}, 'team', this.value)">${teamOptions}</select></td>
           <td>
             <select onchange="updateScorer(${scorer.originalIndex}, 'player', this.value)">${suggestionOptions}</select>
-            <input style="margin-top:8px" list="${datalistId}" value="${escapeAttr(scorer.player)}" placeholder="Type player name — suggestions from selected team" oninput="updateScorer(${scorer.originalIndex}, 'player', this.value)">
+            <input style="margin-top:8px" list="${datalistId}" value="${escapeAttr(scorer.player)}" placeholder="Type player name — suggestions from selected team" oninput="updateScorer(${scorer.originalIndex}, 'player', this.value, false)" onchange="renderScorers()">
             <datalist id="${datalistId}">${datalistOptions}</datalist>
           </td>
           <td><input type="number" min="0" value="${Number(scorer.goals || 0)}" oninput="updateScorer(${scorer.originalIndex}, 'goals', this.value)"></td>
