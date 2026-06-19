@@ -652,6 +652,15 @@
     .filter-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .mini-owner { color: var(--gold); font-size: 12px; font-weight: 900; margin-top: 4px; }
 
+
+    .scorer-tools { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .scorer-tools input, .scorer-tools select { width:auto; min-width:150px; }
+    .scorer-tools .player-search { min-width:220px; }
+    .scorer-logo { width:46px; height:46px; min-width:46px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:50%; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); font-size:14px; font-weight:950; }
+    .scorer-logo img { width:100%; height:100%; object-fit:cover; display:block; }
+    .owner-goal-pill { display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:999px; background:rgba(255,213,106,0.12); border:1px solid rgba(255,213,106,0.25); color:var(--gold); font-weight:950; }
+    .top-scorer-table { min-width:760px; }
+
     .manual-logo-grid {
       display: grid;
       grid-template-columns: minmax(220px, 1fr) auto auto auto;
@@ -678,7 +687,16 @@
     .manual-logo-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     @media (max-width: 760px) {
-      .manual-logo-grid { grid-template-columns: 1fr; }
+  
+    .scorer-tools { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .scorer-tools input, .scorer-tools select { width:auto; min-width:150px; }
+    .scorer-tools .player-search { min-width:220px; }
+    .scorer-logo { width:46px; height:46px; min-width:46px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:50%; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); font-size:14px; font-weight:950; }
+    .scorer-logo img { width:100%; height:100%; object-fit:cover; display:block; }
+    .owner-goal-pill { display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:999px; background:rgba(255,213,106,0.12); border:1px solid rgba(255,213,106,0.25); color:var(--gold); font-weight:950; }
+    .top-scorer-table { min-width:760px; }
+
+    .manual-logo-grid { grid-template-columns: 1fr; }
       .manual-logo-preview { width: 72px; height: 72px; justify-self: center; }
     }
 
@@ -766,13 +784,23 @@
 
     <section class="section glass-card">
       <div class="section-header">
-        <div><h2>Top Scorer List</h2><div class="muted-note">Type the player name and goals. Owned by is linked automatically from the quarter-final owner for that team.</div></div>
-        <button onclick="addScorerRow()">+ Add Scorer</button>
+        <div>
+          <h2>Top Scorer List</h2>
+          <div class="muted-note">Search the player list first. If the player is not there, keep the name in the search box, choose the team, enter goals, and click Add Scorer.</div>
+        </div>
+        <div class="scorer-tools">
+          <span class="muted-note">Show</span>
+          <select id="scorerLimit" onchange="renderScorers()"><option value="5">Top 5</option><option value="10" selected>Top 10</option><option value="20">Top 20</option></select>
+          <input class="player-search" id="scorerSearchInput" placeholder="Search or type player name" oninput="renderScorers()">
+          <select id="newScorerTeam"></select>
+          <input id="newScorerGoals" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Goals">
+          <button onclick="addScorerRow()">+ Add Scorer</button>
+        </div>
       </div>
       <div class="table-wrapper">
-        <table>
+        <table class="top-scorer-table">
           <thead>
-            <tr><th>Rank</th><th>Player</th><th>Team</th><th>Goals</th><th>Owned By</th><th></th></tr>
+            <tr><th>Rank</th><th>Player</th><th>Owner</th><th>Goals</th><th></th></tr>
           </thead>
           <tbody id="scorerTableBody"></tbody>
         </table>
@@ -1041,9 +1069,8 @@
       if (team?.code) return countryCodeToFlag(team.code);
       if (countryAliases[key]) return countryCodeToFlag(countryAliases[key]);
       const savedLogo = getSavedTeamLogo(cleaned);
-      if (savedLogo && savedLogo.startsWith("data:")) return `<img src="${savedLogo}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
-      if (defaultLocalLogoFiles[key]) return `<img src="${defaultLocalLogoFiles[key]}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
       if (savedLogo) return `<img src="${savedLogo}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
+      if (defaultLocalLogoFiles[key]) return `<img src="${defaultLocalLogoFiles[key]}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
       if (team?.logo) return `<img src="${team.logo}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${team.name}">`;
       if (knownLogoDomains[key]) return `<img src="https://logo.clearbit.com/${knownLogoDomains[key]}" onerror="this.outerHTML='${initialsForTeam(cleaned)}'" alt="${cleaned}">`;
       return initialsForTeam(cleaned);
@@ -1574,11 +1601,45 @@
       return playerInitials(scorer.player);
     }
 
+    function renderScorerAddControls() {
+      const teamSelect = document.getElementById("newScorerTeam");
+      if (!teamSelect) return;
+      const current = teamSelect.value;
+      const validTeams = getPickedTeams().map(x => x.team);
+      teamSelect.innerHTML = "";
+      if (!validTeams.length) {
+        const option = document.createElement("option");
+        option.value = "Select Team";
+        option.textContent = "Pick QF teams first";
+        teamSelect.appendChild(option);
+        return;
+      }
+      validTeams.forEach(team => {
+        const option = document.createElement("option");
+        option.value = team;
+        option.textContent = team;
+        teamSelect.appendChild(option);
+      });
+      if ([...teamSelect.options].some(o => o.value === current)) teamSelect.value = current;
+    }
+
+    function teamLogoHtml(teamName) {
+      const icon = getTeamIcon(teamName);
+      return icon || initialsForTeam(teamName) || "⚽";
+    }
+
     function addScorerRow() {
       const t = activeTournament();
       const d = ensureTournamentData(t);
+      const searchInput = document.getElementById("scorerSearchInput");
+      const teamSelect = document.getElementById("newScorerTeam");
+      const goalsInput = document.getElementById("newScorerGoals");
       const firstTeam = getPickedTeams()[0]?.team || "Select Team";
-      d.scorers.push({ player: "", team: firstTeam, goals: "", owner: ownerOfTeamFromTournament(d, firstTeam) });
+      const playerName = String(searchInput?.value || "").trim();
+      const selectedTeam = String(teamSelect?.value || firstTeam).trim() || firstTeam;
+      const goals = String(goalsInput?.value || "").replace(/[^0-9]/g, "");
+      d.scorers.push({ player: playerName, team: selectedTeam, goals, owner: ownerOfTeamFromTournament(d, selectedTeam) });
+      if (goalsInput) goalsInput.value = "";
       saveAppState();
       renderScorers();
       renderTrophyCabinet();
@@ -1589,7 +1650,6 @@
       updateStats();
     }
 
-
     function deleteScorerRow(originalIndex) {
       const t = activeTournament();
       const d = ensureTournamentData(t);
@@ -1598,6 +1658,7 @@
       renderScorers();
       renderAllTimeGoldenBoot();
       renderStoryRecap();
+      renderRivalryStats();
       updateStats();
     }
 
@@ -1616,7 +1677,6 @@
       updateStats();
     }
 
-
     function refreshScorerTeamChoices() {
       const validTeams = getPickedTeams().map(x => x.team);
       const t = activeTournament();
@@ -1627,21 +1687,30 @@
 
     function renderScorers() {
       const tbody = document.getElementById("scorerTableBody");
+      if (!tbody) return;
+      renderScorerAddControls();
       const t = activeTournament();
       const d = ensureTournamentData(t);
-      const validTeams = getPickedTeams().map(x => x.team);
       d.scorers.forEach(s => { s.owner = ownerOfTeamFromTournament(d, s.team); });
-      const sorted = d.scorers.map((s, originalIndex) => ({...s, originalIndex})).sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0));
+      const query = String(document.getElementById("scorerSearchInput")?.value || "").trim().toLowerCase();
+      const limit = Number(document.getElementById("scorerLimit")?.value || 10);
+      let sorted = d.scorers
+        .map((s, originalIndex) => ({...s, originalIndex}))
+        .sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0));
+      if (query) sorted = sorted.filter(s => String(s.player || "").toLowerCase().includes(query));
+      const limited = sorted.slice(0, limit);
       tbody.innerHTML = "";
-      sorted.forEach((scorer, rankIndex) => {
-        const teamOptions = ["Select Team"].concat(validTeams).map(team => `<option value="${escapeAttr(team)}" ${team === scorer.team ? "selected" : ""}>${team === "Select Team" ? "⚽" : ""} ${escapeAttr(team)}</option>`).join("");
+      if (!limited.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="muted-note">No scorer found${query ? ` for "${escapeAttr(query)}"` : ""}. Choose a team, enter goals, and click Add Scorer to add one.</td></tr>`;
+        return;
+      }
+      limited.forEach((scorer, rankIndex) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><span class="rank-badge">${rankIndex + 1}</span></td>
-          <td><div class="player-cell"><span class="headshot">${headshotHtml(scorer)}</span><input value="${escapeAttr(scorer.player || "")}" placeholder="Type player name" oninput="updateScorer(${scorer.originalIndex}, 'player', this.value, false)" onchange="renderScorers()"></div></td>
-          <td><select onchange="updateScorer(${scorer.originalIndex}, 'team', this.value)">${teamOptions}</select></td>
+          <td><div class="player-cell"><span class="scorer-logo">${teamLogoHtml(scorer.team)}</span><input value="${escapeAttr(scorer.player || "")}" placeholder="Type player name" oninput="updateScorer(${scorer.originalIndex}, 'player', this.value, false)" onchange="renderScorers()"></div></td>
+          <td><strong>${escapeAttr(scorer.owner || ownerOfTeamFromTournament(d, scorer.team))}</strong></td>
           <td><input type="text" inputmode="numeric" pattern="[0-9]*" value="${escapeAttr(scorer.goals || "")}" placeholder="Goals" oninput="updateScorer(${scorer.originalIndex}, 'goals', this.value, false)" onchange="renderScorers()"></td>
-          <td><strong>${escapeAttr(scorer.owner || ownerOfTeamFromTournament(d, scorer.team))}</strong><div class="mini-owner">Auto-linked</div></td>
           <td><button class="small-danger" onclick="deleteScorerRow(${scorer.originalIndex})">Delete</button></td>
         `;
         tbody.appendChild(tr);
@@ -2053,6 +2122,7 @@
       ctx.fillStyle = "rgba(255,255,255,0.78)"; ctx.font = "30px Arial"; ctx.fillText(golden && golden.player ? `Golden Boot: ${golden.player} - ${golden.goals || 0} goals` : "Golden Boot: Pending", 540, 790);
       ctx.fillStyle = "#38f5e5"; ctx.font = "bold 32px Arial"; ctx.fillText("FIFA 26 Tournament Hub", 540, 930);
     }
+
     let pendingManualLogoDataUrl = "";
 
     function setManualLogoStatus(message) {
