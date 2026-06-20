@@ -732,9 +732,6 @@
     .league-position { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.09); font-weight: 950; }
     .league-position.top { color: #07120c; background: var(--green); }
     .league-owner { font-weight: 900; color: var(--gold); }
-    .league-team-setup { min-width: 700px; }
-    .league-team-setup td:first-child { width: 60px; }
-    .league-team-setup input { min-width: 220px; }
     .league-schedule { min-width: 900px; }
     .league-schedule input[type="number"] { width: 74px; text-align: center; font-weight: 900; }
     .league-schedule input[type="text"] { min-width: 165px; }
@@ -804,21 +801,9 @@
       <div class="stat-card"><div class="stat-label">Rivalry Record</div><div class="stat-value" id="statSeasonRecord">0 - 0</div></div>
     </section>
 
-    <section class="section glass-card league-panel" id="leagueTeamSetupSection">
-      <div class="section-header">
-        <div><h2>League Teams</h2><div class="muted-note">Enter four teams for Joel and four teams for Joshua. The schedule and table update automatically.</div></div>
-      </div>
-      <div class="table-wrapper">
-        <table class="league-team-setup">
-          <thead><tr><th>#</th><th>Team</th><th>Owner</th></tr></thead>
-          <tbody id="leagueTeamSetupBody"></tbody>
-        </table>
-      </div>
-    </section>
-
     <section class="section glass-card league-panel" id="leagueTableSection">
       <div class="section-header">
-        <div><h2>League Table</h2><div class="muted-note">Sorted by points, goal difference, then goals scored.</div></div>
+        <div><h2>League Table</h2><div class="muted-note">Edit team names directly in the table. Standings are sorted by points, goal difference, then goals scored.</div></div>
       </div>
       <div class="table-wrapper">
         <table class="league-table">
@@ -1752,19 +1737,11 @@
       if (!t || t.format !== "league") return;
       const d = ensureTournamentData(t);
       syncLeagueChampion(d);
-      const setupBody = document.getElementById("leagueTeamSetupBody");
-      setupBody.innerHTML = d.leagueTeams.map((team, index) => `
-        <tr>
-          <td><span class="rank-badge">${index + 1}</span></td>
-          <td><div class="team-cell"><span class="team-icon">${getTeamIcon(team.name)}</span><input value="${escapeAttr(team.name)}" placeholder="${team.owner}'s Team ${index % 4 + 1}" onchange="updateLeagueTeam(${index}, this.value)"></div></td>
-          <td><span class="league-owner">${team.owner}</span></td>
-        </tr>`).join("");
-
       const standings = leagueStandings(d);
       document.getElementById("leagueTableBody").innerHTML = standings.map((row, index) => `
         <tr>
           <td><span class="league-position ${index === 0 ? "top" : ""}">${index + 1}</span></td>
-          <td><div class="team-cell"><span class="team-icon">${getTeamIcon(row.team)}</span><strong>${escapeAttr(row.team || "Team pending")}</strong></div></td>
+          <td><div class="team-cell"><span class="team-icon">${getTeamIcon(row.team)}</span><input value="${escapeAttr(row.team)}" placeholder="${row.owner}'s Team ${row.slot % 4 + 1}" onchange="updateLeagueTeam(${row.slot}, this.value)"></div></td>
           <td class="league-owner">${row.owner}</td><td>${row.played}</td><td>${row.won}</td><td>${row.drawn}</td><td>${row.lost}</td>
           <td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference > 0 ? "+" : ""}${row.goalDifference}</td><td><strong>${row.points}</strong></td>
         </tr>`).join("");
