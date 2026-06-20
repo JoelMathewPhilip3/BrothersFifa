@@ -1720,7 +1720,7 @@
         else { a.drawn++; b.drawn++; a.points++; b.points++; }
       });
       rows.forEach(row => { row.goalDifference = row.goalsFor - row.goalsAgainst; });
-      return rows.sort((a,b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor || a.team.localeCompare(b.team));
+      return rows.sort((a,b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor || a.slot - b.slot);
     }
 
     function leagueComplete(data) {
@@ -1741,7 +1741,7 @@
       document.getElementById("leagueTableBody").innerHTML = standings.map((row, index) => `
         <tr>
           <td><span class="league-position ${index === 0 ? "top" : ""}">${index + 1}</span></td>
-          <td><div class="team-cell"><span class="team-icon">${getTeamIcon(row.team)}</span><input value="${escapeAttr(row.team)}" placeholder="${row.owner}'s Team ${row.slot % 4 + 1}" onchange="updateLeagueTeam(${row.slot}, this.value)"></div></td>
+          <td><div class="team-cell"><span class="team-icon">${getTeamIcon(row.team)}</span><input value="${escapeAttr(row.team)}" placeholder="${row.owner}'s Team ${row.slot % 4 + 1}" oninput="updateLeagueTeam(${row.slot}, this.value, false)" onchange="updateLeagueTeam(${row.slot}, this.value, true)"></div></td>
           <td class="league-owner">${row.owner}</td><td>${row.played}</td><td>${row.won}</td><td>${row.drawn}</td><td>${row.lost}</td>
           <td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference > 0 ? "+" : ""}${row.goalDifference}</td><td><strong>${row.points}</strong></td>
         </tr>`).join("");
@@ -1765,12 +1765,13 @@
       }).join("");
     }
 
-    function updateLeagueTeam(index, value) {
+    function updateLeagueTeam(index, value, rerender = true) {
       const d = ensureTournamentData(activeTournament());
       d.leagueTeams[index].name = String(value || "").trimStart();
-      if (d.leagueTeams[index].name.trim()) addCustomTeamToTournament(d.leagueTeams[index].name.trim());
+      if (rerender && d.leagueTeams[index].name.trim()) addCustomTeamToTournament(d.leagueTeams[index].name.trim());
       syncLeagueChampion(d);
       saveAppState();
+      if (!rerender) return;
       renderLeagueMode();
       renderScorers();
       renderStoryRecap();
