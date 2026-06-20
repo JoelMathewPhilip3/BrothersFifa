@@ -710,6 +710,60 @@
     .hero-recap .section-header { margin-bottom: 10px; }
     .hero-recap .recap-box { margin: 0; }
 
+    .format-badge {
+      display: inline-flex;
+      margin-left: 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(56,245,229,0.12);
+      border: 1px solid rgba(56,245,229,0.3);
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+
+    .league-panel { display: none; }
+    .league-panel.active { display: block; }
+    .knockout-panel.hidden { display: none; }
+    .league-table { min-width: 760px; }
+    .league-table .team-cell { display: flex; align-items: center; gap: 10px; min-width: 220px; }
+    .league-position { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.09); font-weight: 950; }
+    .league-position.top { color: #07120c; background: var(--green); }
+    .league-owner { font-weight: 900; color: var(--gold); }
+    .league-team-setup { min-width: 700px; }
+    .league-team-setup td:first-child { width: 60px; }
+    .league-team-setup input { min-width: 220px; }
+    .league-schedule { min-width: 900px; }
+    .league-schedule input[type="number"] { width: 74px; text-align: center; font-weight: 900; }
+    .league-schedule input[type="text"] { min-width: 165px; }
+    .fixture-team { display: flex; align-items: center; gap: 8px; min-width: 160px; font-weight: 850; }
+    .round-label td { background: rgba(56,245,229,0.08); color: var(--cyan); font-weight: 900; text-transform: uppercase; letter-spacing: .6px; }
+
+    dialog {
+      width: min(92vw, 520px);
+      border: 1px solid var(--line-bright);
+      border-radius: 18px;
+      padding: 0;
+      color: var(--text);
+      background: #111526;
+      box-shadow: var(--shadow);
+    }
+    dialog::backdrop { background: rgba(0,0,0,.75); backdrop-filter: blur(5px); }
+    .format-dialog-body { padding: 22px; }
+    .format-dialog-body h2 { margin: 0 0 8px; }
+    .format-dialog-body > input { width: 100%; margin: 14px 0; }
+    .format-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .format-choice { min-height: 125px; text-align: left; color: var(--text); background: rgba(255,255,255,.07); border: 1px solid var(--line); box-shadow: none; }
+    .format-choice strong { display: block; color: var(--gold); font-size: 17px; margin-bottom: 7px; }
+    .format-choice span { color: var(--muted); font-weight: 600; line-height: 1.4; }
+    .dialog-cancel { margin-top: 12px; width: 100%; }
+
+    @media (max-width: 600px) {
+      .format-choice-grid { grid-template-columns: 1fr; }
+    }
+
   </style>
 </head>
 <body>
@@ -725,6 +779,19 @@
 
   <div class="tournament-tabs" id="tournamentTabs"></div>
 
+  <dialog id="newTournamentDialog">
+    <div class="format-dialog-body">
+      <h2>Create New Tournament</h2>
+      <div class="muted-note">Enter a name, then choose how Joel and Joshua will play.</div>
+      <input id="newTournamentName" placeholder="Tournament or league name">
+      <div class="format-choice-grid">
+        <button class="format-choice" onclick="confirmCreateTournament('knockout')"><strong>Road to Final</strong><span>8-team quarter-finals, semi-finals, and final.</span></button>
+        <button class="format-choice" onclick="confirmCreateTournament('league')"><strong>League Format</strong><span>Each Joel team plays all four Joshua teams.</span></button>
+      </div>
+      <button class="ghost-button dialog-cancel" onclick="closeTournamentDialog()">Cancel</button>
+    </div>
+  </dialog>
+
   <main class="page-shell">
     <section class="stats-grid">
       <div class="stat-card"><div class="stat-label">Current Tournament</div><div class="stat-value" id="statTournament">-</div></div>
@@ -737,7 +804,43 @@
       <div class="stat-card"><div class="stat-label">Rivalry Record</div><div class="stat-value" id="statSeasonRecord">0 - 0</div></div>
     </section>
 
-    <section class="bracket-wrapper">
+    <section class="section glass-card league-panel" id="leagueTeamSetupSection">
+      <div class="section-header">
+        <div><h2>League Teams</h2><div class="muted-note">Enter four teams for Joel and four teams for Joshua. The schedule and table update automatically.</div></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="league-team-setup">
+          <thead><tr><th>#</th><th>Team</th><th>Owner</th></tr></thead>
+          <tbody id="leagueTeamSetupBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section glass-card league-panel" id="leagueTableSection">
+      <div class="section-header">
+        <div><h2>League Table</h2><div class="muted-note">Sorted by points, goal difference, then goals scored.</div></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="league-table">
+          <thead><tr><th>Pos</th><th>Team</th><th>Owner</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GS</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
+          <tbody id="leagueTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section glass-card league-panel" id="leagueScheduleSection">
+      <div class="section-header">
+        <div><h2>Match Schedule &amp; Scores</h2><div class="muted-note">Every Joel team plays every Joshua team once. Teams belonging to the same owner never play each other.</div></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="league-schedule">
+          <thead><tr><th>Match</th><th>Home Team</th><th>Goals</th><th>Away Team</th><th>Goals</th><th>FIFA Game Mode</th><th>Status</th></tr></thead>
+          <tbody id="leagueScheduleBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="bracket-wrapper knockout-panel" id="knockoutBracketSection">
       <div class="bracket pro-bracket">
         <div class="round qf-round">
           <h2 class="round-title">Quarter Finals - Type 8 Teams</h2>
@@ -1080,6 +1183,32 @@
       return [...new Set((list || []).map(x => String(x || "").trim()).filter(Boolean))];
     }
 
+    function buildLeagueFixtures() {
+      const fixtures = [];
+      const joelSlots = [0,1,2,3];
+      const joshuaSlots = [4,5,6,7];
+      for (let round = 1; round <= 4; round++) {
+        for (let i = 0; i < 4; i++) {
+          const joelTeam = joelSlots[i];
+          const joshuaTeam = joshuaSlots[(i + round - 1) % 4];
+          const a = round % 2 ? joelTeam : joshuaTeam;
+          const b = round % 2 ? joshuaTeam : joelTeam;
+          fixtures.push({ id: `cross-r${round}m${i + 1}`, round, a, b, goalsA: "", goalsB: "", gameMode: "" });
+        }
+      }
+      return fixtures;
+    }
+
+    function migrateLeagueFixtures(existing) {
+      const savedByPair = new Map((existing || []).map(match => [
+        [Number(match.a), Number(match.b)].sort((a,b) => a-b).join("-"), match
+      ]));
+      return buildLeagueFixtures().map(match => {
+        const saved = savedByPair.get([match.a, match.b].sort((a,b) => a-b).join("-"));
+        return saved ? { ...match, goalsA: saved.a === match.a ? saved.goalsA : saved.goalsB, goalsB: saved.a === match.a ? saved.goalsB : saved.goalsA, gameMode: saved.gameMode || "" } : match;
+      });
+    }
+
     function knownTeamNames() {
       return teams.map(t => t.name);
     }
@@ -1087,6 +1216,7 @@
     function ensureTournamentData(t) {
       if (!t.data) t.data = {};
       const d = t.data;
+      if (!t.format) t.format = "knockout";
       qfTeamIds.forEach(id => { if (!d[id]) d[id] = "Select Team"; });
       ownerIds.forEach(id => { if (!d[id]) d[id] = "Joel"; });
       semiIds.concat(finalIds, ["champion"]).forEach(id => { if (!d[id]) d[id] = "Select Team"; });
@@ -1094,6 +1224,17 @@
       if (!Array.isArray(d.scorers)) d.scorers = [];
       if (!Array.isArray(d.matchHistory)) d.matchHistory = [];
       if (!d.teamLogos || typeof d.teamLogos !== "object") d.teamLogos = {};
+      if (!Array.isArray(d.leagueTeams) || d.leagueTeams.length !== 8) {
+        d.leagueTeams = qfTeamIds.map((id, index) => ({
+          name: d[id] && d[id] !== "Select Team" ? d[id] : "",
+          owner: index < 4 ? "Joel" : "Joshua"
+        }));
+      }
+      d.leagueTeams = d.leagueTeams.slice(0, 8).map((team, index) => ({
+        name: String(team?.name || ""),
+        owner: index < 4 ? "Joel" : "Joshua"
+      }));
+      if (!Array.isArray(d.leagueMatches) || d.leagueMatches.length !== 16) d.leagueMatches = migrateLeagueFixtures(d.leagueMatches);
       const customFromSavedSlots = qfTeamIds.concat(semiIds, finalIds, ["champion"])
         .map(id => d[id])
         .filter(name => name && name !== "Select Team" && !knownTeamNames().includes(name));
@@ -1164,10 +1305,11 @@
       if ([...select.options].some(o => o.value === current)) select.value = current;
     }
 
-    function newTournament(name) {
+    function newTournament(name, format = "knockout") {
       return {
         id: uid(),
         name: name || "Tournament 1",
+        format,
         createdAt: new Date().toISOString(),
         data: {
           team1: "Argentina", team2: "Brazil", team3: "France", team4: "Portugal",
@@ -1178,6 +1320,11 @@
           final1: "Select Team", final2: "Select Team", champion: "Select Team",
           scoreQF1A: "", scoreQF1B: "", scoreQF2A: "", scoreQF2B: "", scoreQF3A: "", scoreQF3B: "", scoreQF4A: "", scoreQF4B: "", scoreSF1A: "", scoreSF1B: "", scoreSF2A: "", scoreSF2B: "", scoreFinalA: "", scoreFinalB: "",
           customTeams: [],
+          leagueTeams: [
+            { name: "", owner: "Joel" }, { name: "", owner: "Joel" }, { name: "", owner: "Joel" }, { name: "", owner: "Joel" },
+            { name: "", owner: "Joshua" }, { name: "", owner: "Joshua" }, { name: "", owner: "Joshua" }, { name: "", owner: "Joshua" }
+          ],
+          leagueMatches: buildLeagueFixtures(),
           matchHistory: [],
           scorers: [
             { player: "", team: "Select Team", goals: "", owner: "Joel" },
@@ -1406,9 +1553,30 @@
     }
 
     function createTournament() {
-      const name = prompt("Tournament name? Example: Christmas Cup, Summer League, Round 3");
+      const dialog = document.getElementById("newTournamentDialog");
+      const input = document.getElementById("newTournamentName");
+      if (input) input.value = "";
+      if (dialog?.showModal) { dialog.showModal(); setTimeout(() => input?.focus(), 50); return; }
+      const name = prompt("Tournament name?");
       if (!name || !name.trim()) return;
-      const t = newTournament(name.trim());
+      const format = confirm("Choose league format? Click OK for League or Cancel for Road to Final.") ? "league" : "knockout";
+      createTournamentWithFormat(name.trim(), format);
+    }
+
+    function confirmCreateTournament(format) {
+      const name = String(document.getElementById("newTournamentName")?.value || "").trim();
+      if (!name) { alert("Enter a tournament or league name first."); return; }
+      closeTournamentDialog();
+      createTournamentWithFormat(name, format);
+    }
+
+    function closeTournamentDialog() {
+      const dialog = document.getElementById("newTournamentDialog");
+      if (dialog?.open) dialog.close();
+    }
+
+    function createTournamentWithFormat(name, format) {
+      const t = newTournament(name, format);
       appState.tournaments.push(t);
       appState.activeId = t.id;
       saveAppState();
@@ -1452,7 +1620,7 @@
       appState.tournaments.forEach(t => {
         const btn = document.createElement("button");
         btn.className = "tab-button" + (t.id === appState.activeId ? " active" : "");
-        btn.textContent = t.name;
+        btn.innerHTML = `${escapeAttr(t.name)} <span class="format-badge">${t.format === "league" ? "League" : "Road"}</span>`;
         btn.onclick = () => { saveActiveTournament(); appState.activeId = t.id; saveAppState(); renderAll(); };
         wrap.appendChild(btn);
       });
@@ -1461,11 +1629,15 @@
     function renderFormFromData() {
       const t = activeTournament();
       const d = ensureTournamentData(t);
+      const isLeague = t.format === "league";
+      document.getElementById("knockoutBracketSection")?.classList.toggle("hidden", isLeague);
+      document.querySelectorAll(".league-panel").forEach(el => el.classList.toggle("active", isLeague));
       qfTeamIds.forEach(id => { const el = document.getElementById(id); if (el) { el.value = d[id] || ""; updateIcon(id); } });
       ownerIds.forEach(id => { const el = document.getElementById(id); if (el) el.value = d[id] || "Joel"; });
       refreshProgressionDropdowns(false);
       semiIds.concat(finalIds, ["champion"]).forEach(id => { const el = document.getElementById(id); if (el && d[id]) el.value = d[id]; updateIcon(id); });
       scoreIds.forEach(id => { const el = document.getElementById(id); if (el) el.value = d[id] || ""; });
+      renderLeagueMode();
       renderScorers();
       renderTrophyCabinet();
       renderAllTimeGoldenBoot();
@@ -1479,10 +1651,14 @@
     function saveActiveTournament() {
       const t = activeTournament();
       const d = ensureTournamentData(t);
-      qfTeamIds.concat(ownerIds, semiIds, finalIds, ["champion"], scoreIds).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) d[id] = el.value;
-      });
+      if (t.format !== "league") {
+        qfTeamIds.concat(ownerIds, semiIds, finalIds, ["champion"], scoreIds).forEach(id => {
+          const el = document.getElementById(id);
+          if (el) d[id] = el.value;
+        });
+      } else {
+        syncLeagueChampion(d);
+      }
       saveAppState();
       renderPickedTeams();
       renderMatchResultCards();
@@ -1525,6 +1701,12 @@
     }
 
     function getPickedTeams() {
+      const t = activeTournament();
+      if (t?.format === "league") {
+        return ensureTournamentData(t).leagueTeams
+          .map(team => ({ team: String(team.name || "").trim(), owner: team.owner }))
+          .filter(x => x.team && x.team !== "Select Team");
+      }
       return qfTeamIds
         .map((id, i) => {
           const teamEl = document.getElementById(id);
@@ -1532,6 +1714,104 @@
           return { team: String(teamEl?.value || "").trim(), owner: ownerEl?.value || "Joel" };
         })
         .filter(x => x.team && x.team !== "Select Team" && x.team !== "__custom_team__");
+    }
+
+    function leagueStandings(data) {
+      const rows = data.leagueTeams.map((team, slot) => ({
+        slot, team: String(team.name || "").trim(), owner: team.owner, played: 0, won: 0, drawn: 0, lost: 0,
+        goalsFor: 0, goalsAgainst: 0, goalDifference: 0, points: 0
+      }));
+      data.leagueMatches.forEach(match => {
+        const aRaw = String(match.goalsA ?? "").trim();
+        const bRaw = String(match.goalsB ?? "").trim();
+        if (aRaw === "" || bRaw === "" || Number.isNaN(Number(aRaw)) || Number.isNaN(Number(bRaw))) return;
+        const a = rows[match.a], b = rows[match.b];
+        if (!a?.team || !b?.team) return;
+        const ga = Number(aRaw), gb = Number(bRaw);
+        a.played++; b.played++; a.goalsFor += ga; a.goalsAgainst += gb; b.goalsFor += gb; b.goalsAgainst += ga;
+        if (ga > gb) { a.won++; b.lost++; a.points += 3; }
+        else if (gb > ga) { b.won++; a.lost++; b.points += 3; }
+        else { a.drawn++; b.drawn++; a.points++; b.points++; }
+      });
+      rows.forEach(row => { row.goalDifference = row.goalsFor - row.goalsAgainst; });
+      return rows.sort((a,b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor || a.team.localeCompare(b.team));
+    }
+
+    function leagueComplete(data) {
+      return data.leagueMatches.every(match => String(match.goalsA ?? "").trim() !== "" && String(match.goalsB ?? "").trim() !== "");
+    }
+
+    function syncLeagueChampion(data) {
+      const standings = leagueStandings(data);
+      data.champion = leagueComplete(data) && standings[0]?.team ? standings[0].team : "Select Team";
+    }
+
+    function renderLeagueMode() {
+      const t = activeTournament();
+      if (!t || t.format !== "league") return;
+      const d = ensureTournamentData(t);
+      syncLeagueChampion(d);
+      const setupBody = document.getElementById("leagueTeamSetupBody");
+      setupBody.innerHTML = d.leagueTeams.map((team, index) => `
+        <tr>
+          <td><span class="rank-badge">${index + 1}</span></td>
+          <td><div class="team-cell"><span class="team-icon">${getTeamIcon(team.name)}</span><input value="${escapeAttr(team.name)}" placeholder="${team.owner}'s Team ${index % 4 + 1}" onchange="updateLeagueTeam(${index}, this.value)"></div></td>
+          <td><span class="league-owner">${team.owner}</span></td>
+        </tr>`).join("");
+
+      const standings = leagueStandings(d);
+      document.getElementById("leagueTableBody").innerHTML = standings.map((row, index) => `
+        <tr>
+          <td><span class="league-position ${index === 0 ? "top" : ""}">${index + 1}</span></td>
+          <td><div class="team-cell"><span class="team-icon">${getTeamIcon(row.team)}</span><strong>${escapeAttr(row.team || "Team pending")}</strong></div></td>
+          <td class="league-owner">${row.owner}</td><td>${row.played}</td><td>${row.won}</td><td>${row.drawn}</td><td>${row.lost}</td>
+          <td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference > 0 ? "+" : ""}${row.goalDifference}</td><td><strong>${row.points}</strong></td>
+        </tr>`).join("");
+
+      let previousRound = 0;
+      document.getElementById("leagueScheduleBody").innerHTML = d.leagueMatches.map((match, index) => {
+        const teamA = d.leagueTeams[match.a]?.name || `Team ${match.a + 1}`;
+        const teamB = d.leagueTeams[match.b]?.name || `Team ${match.b + 1}`;
+        const header = match.round !== previousRound ? `<tr class="round-label"><td colspan="7">Round ${match.round}</td></tr>` : "";
+        previousRound = match.round;
+        const complete = String(match.goalsA ?? "").trim() !== "" && String(match.goalsB ?? "").trim() !== "";
+        return `${header}<tr>
+          <td>${index + 1}</td>
+          <td><div class="fixture-team"><span class="team-icon">${getTeamIcon(teamA)}</span>${escapeAttr(teamA)}</div></td>
+          <td><input type="number" min="0" inputmode="numeric" value="${escapeAttr(match.goalsA)}" onchange="updateLeagueMatch(${index}, 'goalsA', this.value)"></td>
+          <td><div class="fixture-team"><span class="team-icon">${getTeamIcon(teamB)}</span>${escapeAttr(teamB)}</div></td>
+          <td><input type="number" min="0" inputmode="numeric" value="${escapeAttr(match.goalsB)}" onchange="updateLeagueMatch(${index}, 'goalsB', this.value)"></td>
+          <td><input type="text" value="${escapeAttr(match.gameMode)}" placeholder="Example: Classic Match" oninput="updateLeagueMatch(${index}, 'gameMode', this.value, false)"></td>
+          <td><span class="status-badge">${complete ? "Played" : "Scheduled"}</span></td>
+        </tr>`;
+      }).join("");
+    }
+
+    function updateLeagueTeam(index, value) {
+      const d = ensureTournamentData(activeTournament());
+      d.leagueTeams[index].name = String(value || "").trimStart();
+      if (d.leagueTeams[index].name.trim()) addCustomTeamToTournament(d.leagueTeams[index].name.trim());
+      syncLeagueChampion(d);
+      saveAppState();
+      renderLeagueMode();
+      renderScorers();
+      renderStoryRecap();
+      updateStats();
+    }
+
+    function updateLeagueMatch(index, field, value, rerender = true) {
+      const d = ensureTournamentData(activeTournament());
+      const match = d.leagueMatches[index];
+      if (!match) return;
+      match[field] = field === "gameMode" ? value : String(value || "").replace(/[^0-9]/g, "");
+      syncLeagueChampion(d);
+      saveAppState();
+      if (rerender) renderLeagueMode();
+      renderTrophyCabinet();
+      renderStoryRecap();
+      renderRivalryStats();
+      drawChampionCard();
+      updateStats();
     }
 
 
@@ -1614,7 +1894,7 @@
       if (!validTeams.length) {
         const option = document.createElement("option");
         option.value = "Select Team";
-        option.textContent = "Pick QF teams first";
+        option.textContent = activeTournament()?.format === "league" ? "Enter league teams first" : "Pick QF teams first";
         teamSelect.appendChild(option);
         return;
       }
@@ -1771,7 +2051,34 @@
       }).filter(m => m.teamA && m.teamB && m.teamA !== "Select Team" && m.teamB !== "Select Team");
     }
 
+    function getLeagueMatchesForData(d) {
+      return (d.leagueMatches || []).map(match => {
+        const teamA = d.leagueTeams?.[match.a]?.name || "";
+        const teamB = d.leagueTeams?.[match.b]?.name || "";
+        const aRaw = String(match.goalsA ?? "").trim();
+        const bRaw = String(match.goalsB ?? "").trim();
+        const hasScore = aRaw !== "" && bRaw !== "" && !Number.isNaN(Number(aRaw)) && !Number.isNaN(Number(bRaw));
+        const a = hasScore ? Number(aRaw) : null;
+        const b = hasScore ? Number(bRaw) : null;
+        return {
+          stage: `League Round ${match.round}`, teamA, teamB, a, b, hasScore,
+          score: hasScore ? `${a} - ${b}` : "",
+          winner: hasScore && a !== b ? (a > b ? teamA : teamB) : "Select Team",
+          gameMode: match.gameMode || ""
+        };
+      }).filter(match => match.teamA && match.teamB);
+    }
+
+    function getTournamentMatches(t) {
+      return t.format === "league" ? getLeagueMatchesForData(t.data) : getBracketMatchesForData(t.data);
+    }
+
     function finalScoreText(d) {
+      const tournament = appState.tournaments.find(item => item.data === d);
+      if (tournament?.format === "league") {
+        const table = leagueStandings(d);
+        return leagueComplete(d) && table[0]?.team ? `${table[0].team} won with ${table[0].points} points` : "League season in progress";
+      }
       const pair = getBracketMatchesForData(d).find(m => m.stage === "Final");
       return pair && pair.hasScore ? `${pair.teamA} ${pair.a}-${pair.b} ${pair.teamB}` : "Final score pending";
     }
@@ -1787,7 +2094,7 @@
 
       appState.tournaments.forEach(t => {
         const d = ensureTournamentData(t);
-        getBracketMatchesForData(d).forEach(match => {
+        getTournamentMatches(t).forEach(match => {
           if (!match.hasScore) return;
           totals.matches++;
           const ownerA = ownerOfTeamFromTournament(d, match.teamA);
@@ -1823,7 +2130,8 @@
       const global = getGlobalStats();
       document.getElementById("statTournament").textContent = t.name;
       document.getElementById("statTeams").textContent = `${picked.length} / 8`;
-      document.getElementById("statChampion").textContent = document.getElementById("champion").value === "Select Team" ? "-" : document.getElementById("champion").value;
+      const champion = t.data.champion && t.data.champion !== "Select Team" ? t.data.champion : "-";
+      document.getElementById("statChampion").textContent = champion;
       document.getElementById("statGoldenBoot").textContent = scorers[0] && scorers[0].player ? `${scorers[0].player} (${scorers[0].goals || 0})` : "-";
       document.getElementById("statMatches").textContent = global.matches;
       document.getElementById("statBiggestWin").textContent = global.biggestWin ? global.biggestWin.label : "-";
@@ -1977,6 +2285,8 @@
     }
 
     function ownerOfTeamFromTournament(data, team) {
+      const leagueTeam = (data.leagueTeams || []).find(item => item.name === team);
+      if (leagueTeam) return leagueTeam.owner;
       for (let i = 1; i <= 8; i++) if (data["team" + i] === team) return data["owner" + i] || "Joel";
       return "-";
     }
@@ -2067,8 +2377,19 @@
       const champion = d.champion && d.champion !== "Select Team" ? d.champion : null;
       const championOwner = champion ? ownerOfTeamFromTournament(d, champion) : null;
       const golden = (d.scorers || []).filter(s => s.player).slice().sort((a,b) => Number(b.goals || 0) - Number(a.goals || 0))[0];
-      const matches = getBracketMatchesForData(d);
+      const matches = getTournamentMatches(t);
       const scored = matches.filter(m => m.hasScore);
+      if (t.format === "league") {
+        const standings = leagueStandings(d);
+        const leader = standings[0];
+        const played = scored.length;
+        const complete = leagueComplete(d);
+        const leaderText = leader?.team ? `${escapeAttr(leader.team)} (${escapeAttr(leader.owner)}) ${complete ? "won" : "leads"} with ${leader.points} points and a ${leader.goalDifference >= 0 ? "+" : ""}${leader.goalDifference} goal difference` : "the table is waiting for its first teams";
+        const goldenText = golden ? ` ${escapeAttr(golden.player)} leads the scoring story for ${escapeAttr(golden.team)} with ${Number(golden.goals || 0)} goals.` : " The Golden Boot race is still open.";
+        const finishText = complete ? `All 16 matches are complete, and ${leaderText}.` : `${played} of 16 matches are complete, and ${leaderText}.`;
+        box.innerHTML = `${escapeAttr(t.name)} is a cross-owner league where every Joel team plays all four Joshua teams once. Teams belonging to the same owner never face each other. ${finishText}${goldenText} Points come first, followed by goal difference and goals scored, so every goal can still move the table.`;
+        return;
+      }
       const finalMatch = matches.find(m => m.stage === "Final");
       const biggest = scored.slice().sort((a,b) => Math.abs(b.a-b.b) - Math.abs(a.a-a.b))[0];
       const thriller = scored.slice().sort((a,b) => (b.a+b.b) - (a.a+a.b))[0];
@@ -2244,7 +2565,7 @@
     function resetCurrentTournament() {
       const t = activeTournament();
       if (!confirm(`Reset ${t.name}?`)) return;
-      const fresh = newTournament(t.name);
+      const fresh = newTournament(t.name, t.format || "knockout");
       t.data = fresh.data;
       saveAppState();
       renderAll();
