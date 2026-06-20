@@ -1217,6 +1217,7 @@
       if (!t.data) t.data = {};
       const d = t.data;
       if (!t.format) t.format = "knockout";
+      d.tournamentFormat = t.format;
       qfTeamIds.forEach(id => { if (!d[id]) d[id] = "Select Team"; });
       ownerIds.forEach(id => { if (!d[id]) d[id] = "Joel"; });
       semiIds.concat(finalIds, ["champion"]).forEach(id => { if (!d[id]) d[id] = "Select Team"; });
@@ -2101,7 +2102,7 @@
           const ownerB = ownerOfTeamFromTournament(d, match.teamB);
           if (totals[ownerA]) { totals[ownerA].goalsFor += match.a; totals[ownerA].goalsAgainst += match.b; }
           if (totals[ownerB]) { totals[ownerB].goalsFor += match.b; totals[ownerB].goalsAgainst += match.a; }
-          const winnerOwner = match.winner && match.winner !== "Select Team" ? ownerOfTeamFromTournament(d, match.winner) : null;
+          const winnerOwner = match.a > match.b ? ownerA : (match.b > match.a ? ownerB : null);
           if (winnerOwner && totals[winnerOwner]) totals[winnerOwner].wins++;
           const totalGoals = match.a + match.b;
           const diff = Math.abs(match.a - match.b);
@@ -2285,8 +2286,10 @@
     }
 
     function ownerOfTeamFromTournament(data, team) {
-      const leagueTeam = (data.leagueTeams || []).find(item => item.name === team);
-      if (leagueTeam) return leagueTeam.owner;
+      if (data.tournamentFormat === "league") {
+        const leagueTeam = (data.leagueTeams || []).find(item => item.name === team);
+        if (leagueTeam) return leagueTeam.owner;
+      }
       for (let i = 1; i <= 8; i++) if (data["team" + i] === team) return data["owner" + i] || "Joel";
       return "-";
     }
